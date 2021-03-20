@@ -7,9 +7,13 @@ import pygame_menu
 # Local
 import vars
 
+debug = True if "debug" in sys.argv else False
+
+levelEdit = True if "levelEdit" in sys.argv else False
+
 pygame.init()
 
-size = (1280, 720)
+size = (1280, 704)
 bg = 0, 0, 0
 
 pygame.display.set_caption("Game.")
@@ -18,7 +22,10 @@ icon = pygame.image.load("assets/guy/lookRight2.png")
 
 pygame.display.set_icon(icon)
 
-screen = pygame.display.set_mode(size)
+if levelEdit:
+    screen = pygame.display.set_mode([size[0]+500,size[1]])
+else:
+    screen = pygame.display.set_mode(size)
 
 frameN = 1
 
@@ -35,8 +42,8 @@ class Terrain:
         self.rect = self.image.get_rect()
         self.image = pygame.transform.scale(self.image,(self.rect.width*scale,self.rect.height*scale))
         self.rect = self.image.get_rect()
-        self.rect.x = pos[0]
-        self.rect.y = pos[1]
+        self.rect.x = pos[0]*scale
+        self.rect.y = pos[1]*scale
         self.weight = weight
         if animation:
             self.animation = [pygame.transform.scale(pygame.image.load(assetPath+im),(self.rect.width,self.rect.height)) for im in animation]
@@ -64,7 +71,7 @@ class Sprite:
         self,image,pos=[0,0],assetPath="assets/",scale=4,
         acceleration=0.25,update=None,
         spriteType="motion",extraImages={},
-        extraArgs={"dead":False,"player":False,"tangable":True,"killable":False},animations=[],
+        extraArgs={},animations=[],
         weight=0
         ):
         self.image = pygame.image.load(assetPath+image) # Image & Rect
@@ -86,7 +93,8 @@ class Sprite:
         self.animations = animations
         self.set_animation("reset")
         self.aliveFrames = 0
-        self.extraArgs = extraArgs # Args
+        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False} # Default Args
+        self.extraArgs.update(extraArgs) # Add args to defaults
         if extraImages:
             self.images["idle"] = self.image
             for im in extraImages:
@@ -212,6 +220,7 @@ class Sprite:
 
 def player_update(sprite,tick):
     player = sprite.extraArgs["player"]-1
+
     if keyboard[player]["up"]:
         sprite.projected_direction = 0
     elif keyboard[player]["down"]:
@@ -255,31 +264,36 @@ def pause():
     pauseMenu.get_current().enable()
 
 def unpause():
-    pygame.mouse.set_visible(False)
+    if not levelEdit:
+        pygame.mouse.set_visible(False)
     pauseMenu.get_current().full_reset()
     pauseMenu.get_current().disable()
 
 def reset():
-    global terrains, sprites, keyboard
+    global terrains, sprites, keyboard, selected
 
     terrains = []
 
     sprites = []
 
-    pygame.mouse.set_visible(False)
+    if not levelEdit:
+        pygame.mouse.set_visible(False)
 
-    Sprite("idle.png",assetPath="assets/guy/",update=player_update,extraImages=vars.images.player,animations=vars.animations.player,weight=100,extraArgs={"player":1,"dead":False,"tangable":True,"killable":True})
+    Sprite("idle.png",assetPath="assets/guy/",update=player_update,extraImages=vars.images.player,animations=vars.animations.player,weight=100,extraArgs={"player":1,"killable":True})
 
-    Sprite("idle.png",assetPath="assets/guy2/",pos=[0,200],extraArgs={"player":None,"dead":False,"tangable":True,"killable":False,"kill":True})
+    Sprite("idle.png",assetPath="assets/guy2/",pos=[0,200],extraArgs={"kill":True})
 
-    # Sprite("idle.png",pos=[90,90],assetPath="assets/guy2/",update=player_update,extraImages=vars.images.player,animations=vars.animations.player,extraArgs={"player":2,"dead":False,"kill":False,"tangable":True,"killable":True})
+    # Sprite("idle.png",pos=[90,90],assetPath="assets/guy2/",update=player_update,extraImages=vars.images.player,animations=vars.animations.player,extraArgs={"player":2,"killable":True})
 
-    Terrain("grass.png",pos=[128,0])
+    Terrain("0.png",assetPath="assets/terrain/grass/",pos=[32,0])
 
     keyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False},{"up":False,"down":False,"left":False,"right":False,"action":False}]
 
+    if levelEdit:
+        selected = None
+
 def update(tick):
-    global frameN
+    global frameN, selected
     frameN += 1
 
     for event in pygame.event.get():
@@ -305,14 +319,68 @@ def update(tick):
         sprite.update(tick)
         screen.blit(sprite.image,sprite.rect)
     
-    font = pygame.font.SysFont("Arial",20)
-    
-    text = font.render(f"Frame: {frameN} | Pos: x {sprites[0].rect.x} y {sprites[0].rect.y} | Dir: {sprites[0].direction} pr {sprites[0].projected_direction} | Edges: T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | Speed: f {sprites[0].fSpeed} - {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",True,(255,0,0))
-    text_rect = text.get_rect()
-    text_rect.left += 70
-    text_rect.top += 70
-    
-    screen.blit(text,text_rect)
+    if debug:
+        font = pygame.font.SysFont("Arial",20)
+        text = font.render(f"Frame: {frameN} | Pos: x {sprites[0].rect.x} y {sprites[0].rect.y} | Dir: {sprites[0].direction} pr {sprites[0].projected_direction} | Edges: T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | Speed: f {sprites[0].fSpeed} - {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",True,(255,0,0))
+        text_rect = text.get_rect()
+        text_rect.left += 70
+        text_rect.top += 70
+        screen.blit(text,text_rect)
+
+    if levelEdit:
+        numDone = 0
+        line = 0
+        levelEditRects = []
+        levelEditAssets = []
+        for sprite in vars.sprites.keys():
+            if numDone == 31:
+                numDone = 0
+                line += 1
+            im = pygame.image.load(sprite+(vars.sprites[sprite]["idle"]))
+            rect = im.get_rect()
+            im = pygame.transform.scale(im,(rect.width*2,rect.height*2))
+            rect = im.get_rect()
+            rect.x = size[0]+numDone*32
+            rect.y = line*32
+            levelEditRects.append(rect)
+            levelEditAssets.append(sprite)
+            screen.blit(im,rect)
+            if selected == sprite:
+                img = pygame.image.load("assets/selected.png")
+                rct = img.get_rect()
+                rct.x = size[0]+numDone*32
+                rct.y = line*32
+                screen.blit(img,rct)
+            numDone += 1
+        for terrain in vars.terrains.keys():
+            if numDone == 31:
+                numDone = 0
+                line += 1
+            im = pygame.image.load(terrain+(vars.terrains[terrain][0]))
+            rect = im.get_rect()
+            im = pygame.transform.scale(im,(rect.width*2,rect.height*2))
+            rect = im.get_rect()
+            rect.x = size[0]+numDone*32
+            rect.y = line*32
+            levelEditRects.append(rect)
+            levelEditAssets.append(terrain)
+            screen.blit(im,rect)
+            if selected == terrain:
+                img = pygame.image.load("assets/selected.png")
+                rct = img.get_rect()
+                rct.x = size[0]+numDone*32
+                rct.y = line*32
+                screen.blit(img,rct)
+            numDone += 1
+        if pygame.mouse.get_pressed(3)[0]:
+            print("MOUSE PRESSED")
+            mouseRect = pygame.Rect(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)
+            clicked = mouseRect.collidelist(levelEditRects)
+            print(f"CLICKED {clicked}")
+            if clicked != -1:
+                selected = levelEditAssets[clicked]
+
+
 
 pauseMenu = pygame_menu.Menu('Paused.',size[0],size[1],theme=pygame_menu.themes.THEME_DARK)
 pauseMenu.add.button('Continue', unpause)
