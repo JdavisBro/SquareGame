@@ -9,6 +9,14 @@ images = {
         "look3f0":"lookLeft1.png","look3f1":"lookLeft2.png","go3f0":"goLeft1.png","go3f1":"goLeft2.png","go3f2":"goLeft3.png",
         "confuzzled0":"confuzzled1.png","confuzzled1":"confuzzled2.png","confuzzled2":"confuzzled3.png","confuzzled3":"confuzzled4.png","confuzzled4":"confuzzled5.png",
         "death0":"death1.png","death1":"death2.png","death2":"death3.png","death3":"death4.png","death4":"death5.png","death5":"death6.png",
+        "celebrate0":"celebrate1.png","celebrate1":"celebrate2.png","celebrate2":"celebrate3.png",
+    },
+    "goal": {
+        "idle": "goal.png",
+        "locked": "locked.png"
+    },
+    "key": {
+        "idle": "key.png"
     },
     "grass": {
         0: "0.png"
@@ -24,6 +32,7 @@ animations = {
             "death": ["death0","death1","death2","death3","death4","death5","death5","death5","death5","death5","death5","death5","death5"],
             "look": ["look{}f0","look{}f1"],
             "go": ["go{}f0","go{}f1","go{}f2"],
+            "celebrate": ["celebrate0","celebrate1","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2","celebrate2"],
             "reset": [],
         },
 
@@ -34,6 +43,8 @@ binds = [
     {pygame.K_UP:"up",pygame.K_DOWN:"down",pygame.K_LEFT:"left",pygame.K_RIGHT:"right",pygame.K_KP0:"action"}
     ]
 
-sprites = {"assets/guy/": "player", "assets/guy2/": "player"}
+sprites = {"assets/guy/": "player", "assets/guy2/": "player", "assets/goal/":"goal","assets/key/":"key"}
 
 terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick"}
+
+typeHierarchy = {"static": 0,"path": 5,"motion": 10}

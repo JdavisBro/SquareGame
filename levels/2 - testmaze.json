@@ -1,0 +1,655 @@
+{
+    "level": {
+        "border": "brick",
+        "background": "brick",
+        "size": [
+            20,
+            6
+        ]
+    },
+    "sprites": [
+        {
+            "image": "idle.png",
+            "assetPath": "assets/guy/",
+            "update": "player",
+            "animations": "player",
+            "pos": [
+                64,
+                64
+            ],
+            "spriteType": "motion",
+            "extraImages": "player",
+            "extraArgs": {
+                "player": 1,
+                "killable": true
+            }
+        },
+        {
+            "image": "idle.png",
+            "extraImages": "goal",
+            "assetPath": "assets/goal/",
+            "pos": [
+                1216,
+                0
+            ],
+            "extraArgs": {
+                "goal": true
+            }
+        },
+        {
+            "image": "idle.png",
+            "extraImages": "player",
+            "assetPath": "assets/guy2/",
+            "spriteType": "path",
+            "pos": [
+                192,
+                512
+            ],
+            "extraArgs": {
+                "kill":false,
+                "path": [
+                    [192,512],
+                    [192,256],
+                    [448,256]
+                ],
+                "pathSpeed": 15,
+                "pathStartup": 60,
+                "pathCooldown": 60
+            }
+        }
+    ],
+    "terrain": [
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                320,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                320,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                576,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                640
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
+                640
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                640
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                576,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                704,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                832,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                896,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1152,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                896,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                704,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                832,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                896,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                640
+            ]
+        }
+    ]
+}
