@@ -12,11 +12,11 @@ images = {
         "celebrate0":"celebrate1.png","celebrate1":"celebrate2.png","celebrate2":"celebrate3.png",
     },
     "goal": {
-        "idle": "goal.png",
+        "idle": "idle.png",
         "locked": "locked.png"
     },
     "key": {
-        "idle": "key.png"
+        "idle": "idle.png"
     },
     "grass": {
         0: "0.png"

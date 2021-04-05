@@ -531,7 +531,7 @@ def levelEditor():
         screen.blit(selectedIm[0],selectedIm[1])
     mouse = pygame.mouse.get_pressed(3)
     if any(mouse):
-        mouseRect = pygame.Rect(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)
+        mouseRect = pygame.Rect(pygame.mouse.get_pos()[0]+12,pygame.mouse.get_pos()[1]+12,1,1)
         clicked = mouseRect.collidelist(list(levelEditAssets.values()))
         if clicked != -1 and mouse[0]:
             if list(levelEditAssets.keys())[clicked] == "save":
