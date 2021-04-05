@@ -4,20 +4,19 @@
         "background": "brick",
         "size": [
             20,
-            6
+            11
         ]
     },
     "sprites": [
         {
             "image": "idle.png",
             "assetPath": "assets/guy/",
-            "update": "player",
             "animations": "player",
             "pos": [
                 64,
                 64
             ],
-            "spriteType": "motion",
+            "type": "player",
             "extraImages": "player",
             "extraArgs": {
                 "player": 1,
@@ -40,7 +39,7 @@
             "image": "idle.png",
             "extraImages": "player",
             "assetPath": "assets/guy2/",
-            "spriteType": "path",
+            "type": "path",
             "pos": [
                 192,
                 512
