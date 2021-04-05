@@ -48,11 +48,10 @@
                 "kill":false,
                 "path": [
                     [192,512],
-                    [192,256],
-                    [448,256]
+                    [192,0]
                 ],
-                "pathSpeed": 15,
-                "pathStartup": 60,
+                "pathSpeed": 20,
+                "pathStartup": 1,
                 "pathCooldown": 60
             }
         }

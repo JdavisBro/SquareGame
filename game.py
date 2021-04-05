@@ -1,8 +1,6 @@
 # Built In
 import json
-import math
 import os
-import random
 import sys
 
 # External
@@ -14,13 +12,17 @@ import vars
 
 debug = True if "debug" in sys.argv else False
 
-levelEdit = True if "levelEdit" in sys.argv else False
-
 pygame.init()
 
 size = (1280, 704) #playfield
 screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
+
+if 'levelEdit' in sys.argv:
+    from levelEdit import LevelEditor
+    levelEdit = LevelEditor(screenSize,size)
+else:
+    levelEdit = None
 
 pygame.display.set_caption("Game.")
 
@@ -46,7 +48,7 @@ def bind(value,upper,lower):
 
 class Terrain:
     def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",scale=4,animation=[]):
-        global levelEdit, editCoords
+        global levelEdit
         self.image = pygame.image.load(assetPath+image)
         self.rect = self.image.get_rect()
         self.image = pygame.transform.scale(self.image,(self.rect.width*scale,self.rect.height*scale))
@@ -62,7 +64,7 @@ class Terrain:
         terrainSurface.blit(self.image,self.rect)
         terrains.append(self)
         if levelEdit:
-            editCoords[str(list(self.rect.topleft))][0] = self
+            levelEdit.editCoords[str(list(self.rect.topleft))][0] = self
 
     def do_animation(self):
         global terrainSurface
@@ -81,7 +83,7 @@ class Sprite:
         extraImages={},extraArgs={},
         animations=[],weight=0
         ):
-        global levelEdit, editCoords
+        global levelEdit
         self.image = pygame.image.load(assetPath+image) # Image & Rect
         self.rect = self.image.get_rect()
         self.image = pygame.transform.scale(self.image,(self.rect.width*scale,self.rect.height*scale))
@@ -92,7 +94,7 @@ class Sprite:
         self.animations = animations
         self.set_animation("reset")
         self.aliveFrames = 0
-        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"goal":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False} # Default Args
+        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False} # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
         if extraImages:
             self.images["idle"] = self.image
@@ -102,14 +104,19 @@ class Sprite:
         self.weight = weight
         sprites.append(self)
         if levelEdit:
-            editCoords[str(list(self.rect.topleft))][0] = self
+            levelEdit.editCoords[str(list(self.rect.topleft))][0] = self
 
     def __lt__(self,other):
         return (self.weight < other.weight) and (vars.typeHierarchy[self.type] < vars.typeHierarchy[other.type])
 
     def update(self,tick):
+        global collectedKeys
         global frameN
         self.aliveFrames += 1
+        if self.extraArgs["goal"] and self.extraArgs["locked"]:
+            if collectedKeys >= levelData["level"]["keys"]:
+                self.set_animation("unlock")
+                self.extraArgs["locked"] = False
         self.do_animations()
 
     def collisions(self,binds):
@@ -153,14 +160,16 @@ class Sprite:
 
         else:
             if anim != "reset":
-                if self.extraArgs["player"]:
+                if self.extraArgs["goal"]:
                     print(f"uuhh, animation '{anim}' asked for but not found (issue???)")
             self.animation = []
 
     def kill(self):
-        if not self.extraArgs["dead"]:
+        if not self.extraArgs["dead"] and self.extraArgs["player"]:
             self.extraArgs["dead"] = True
             self.set_animation("death")
+        else:
+            sprites.remove(self)
 
 class PlayerSprite(Sprite):
     def __init__(
@@ -194,7 +203,7 @@ class PlayerSprite(Sprite):
                     self.set_animation("look",self.direction)
                 if keyboard[player]["action"] and (self.direction is not None):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
-                    rects = [s.rect for s in sprites if s != self] + [t.rect for t in terrains]
+                    rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],s.extraArgs["goal"]))] + [t.rect for t in terrains]
                     collides = movedRect.collidelistall(rects)
                     if (terrainSurface.get_rect().contains(movedRect)) and not collides:
                         self.fSpeed = 40
@@ -215,34 +224,41 @@ class PlayerSprite(Sprite):
                 elif self.direction == 3: #left
                     self.speed[0] = round((self.speed[0] - accel/self.startup) if (self.speed[0]>self.fSpeed*-1) else self.fSpeed*-1,2)
             self.rect = self.rect.move([round(self.speed[0]),round(self.speed[1])])
-            if self.extraArgs["tangable"]:
-                binds = []
-                self.rect.top,binded = bind(self.rect.top,size[1],0)
-                binds.append(binded)
-                self.rect.left,binded = bind(self.rect.left,size[0],0)
-                binds.append(binded)
-                self.rect.bottom,binded = bind(self.rect.bottom,size[1],0)
-                binds.append(binded)
-                self.rect.right,binded = bind(self.rect.right,size[0],0)
-                binds.append(binded)
-                binds = self.collisions(binds)
-                if any(binds):
-                    self.speed = [0,0]
-                    self.fSpeed = 0
-                    if not self.animation:
-                        self.set_animation("collide")
-                self.startup -= 0.5 if self.startup > 1 else 0
+            binds = []
+            self.rect.top,binded = bind(self.rect.top,size[1],0)
+            binds.append(binded)
+            self.rect.left,binded = bind(self.rect.left,size[0],0)
+            binds.append(binded)
+            self.rect.bottom,binded = bind(self.rect.bottom,size[1],0)
+            binds.append(binded)
+            self.rect.right,binded = bind(self.rect.right,size[0],0)
+            binds.append(binded)
+            binds = self.collisions(binds)
+            if any(binds):
+                if self.extraArgs["pushed"]:
+                    self.kill()
+                self.speed = [0,0]
+                self.fSpeed = 0
+                if not self.animation:
+                    self.set_animation("collide")
+            self.startup -= 0.5 if self.startup > 1 else 0
+            self.extraArgs["pushed"] = False
         super().update(tick)
 
     def collisions(self,binds):
+        global collectedKeys
         spritesNoMe = [sprite for sprite in sprites if sprite != self]
         rects = [sprite.rect for sprite in spritesNoMe if sprite.extraArgs["tangable"]]
         collides = self.rect.collidelistall(rects)
         if collides:
             for collision in collides:
-                if spritesNoMe[collision].extraArgs["goal"] and self.extraArgs["player"]:
+                if (spritesNoMe[collision].extraArgs["goal"] and not spritesNoMe[collision].extraArgs["locked"]):
                     self.set_animation("celebrate")
                     self.extraArgs["won"] = True
+                if spritesNoMe[collision].extraArgs["key"]:
+                    spritesNoMe[collision].kill()
+                    collectedKeys += 1
+                    continue
                 if spritesNoMe[collision].extraArgs["kill"] and self.extraArgs["killable"]:
                     self.kill()
                 if self.extraArgs["kill"] and spritesNoMe[collision].extraArgs["killable"]:
@@ -261,9 +277,6 @@ class PlayerSprite(Sprite):
         rects = [terrain.rect for terrain in terrains]
         collides = self.rect.collidelistall(rects)
         if collides:
-            if self.extraArgs["pushed"]:
-                self.kill()
-                return [True]
             for collision in collides:
                 binds.append(True)
                 if self.direction == 0: #up
@@ -274,7 +287,6 @@ class PlayerSprite(Sprite):
                     self.rect.bottom = terrains[collision].rect.top
                 elif self.direction == 3: #left
                     self.rect.left = terrains[collision].rect.right
-        self.extraArgs["pushed"] = False
         return binds
 
 class PathSprite(Sprite):
@@ -337,7 +349,7 @@ class PathSprite(Sprite):
                 if self.extraArgs["kill"] and spritesNoMe[collision].extraArgs["killable"]:
                     spritesNoMe[collision].kill()
                     return
-                if isinstance(spritesNoMe[collision],PlayerSprite):
+                if isinstance(spritesNoMe[collision],PlayerSprite) and not spritesNoMe[collision].extraArgs["dead"]:
                     if ((move[0] if move[0] > 0 else move[0]*-1) > (move[1] if move[1] > 0 else move[1]*-1)):
                         if move[0] >= 0:
                             spritesNoMe[collision].rect.left = self.rect.right
@@ -348,7 +360,7 @@ class PathSprite(Sprite):
                             spritesNoMe[collision].rect.top = self.rect.bottom
                         else:
                             spritesNoMe[collision].rect.bottom = self.rect.top
-                    spritesNoMe[collision].extraArgs["pushed"] = True
+                    #5spritesNoMe[collision].extraArgs["pushed"] = True
 
 def start():
     global clock,frameN,goMainMenu,levelName
@@ -388,7 +400,7 @@ def returnToMainMenu():
     goMainMenu = True
 
 def reset_level():
-    global levelEdit, staticSurface, levelData, editCoords, prevGridPos, levelEditAssets, selected, selectedIm, previousMouse, levelName, editSurface, bg, spriteTypes
+    global staticSurface, levelData, prevGridPos, previousMouse, levelName, bg, spriteTypes
 
     with open(f"levels/{levelName}.json","r") as f:
         levelData = json.load(f)
@@ -428,62 +440,11 @@ def reset_level():
     if not levelEdit:
         pygame.mouse.set_visible(False)
     else:
-        prevGridPos = [-1,-1]
-        editCoords = {}
-        editSurface = pygame.Surface((screenSize[0]+500,screenSize[1]))
-        tiled = pygame.image.load("assets/tile.png")
-        editSurface.blit(tiled,(24,24))
-        selectedIm = []
-        selectedIm.append(pygame.image.load("assets/selected.png"))
-        selectedIm.append(selectedIm[0].get_rect())
-        selected = None
-        levelEditAssets = {}
-        numDone = 0
-        line = 0
-        for sprite in vars.sprites.keys():
-            if numDone == 31:
-                numDone = 0
-                line += 1
-            im = pygame.image.load(sprite+(vars.images[vars.sprites[sprite]]["idle"]))
-            rect = im.get_rect()
-            im = pygame.transform.scale(im,(rect.width*2,rect.height*2))
-            rect = im.get_rect()
-            rect.x = size[0]+numDone*32
-            rect.y = line*32
-            levelEditAssets[sprite] = rect
-            editSurface.blit(im,rect)
-            numDone += 1
-        for terrain in vars.terrains.keys():
-            if numDone == 31:
-                numDone = 0
-                line += 1
-            im = pygame.image.load(terrain+(vars.images[vars.terrains[terrain]][0]))
-            rect = im.get_rect()
-            im = pygame.transform.scale(im,(rect.width*2,rect.height*2))
-            rect = im.get_rect()
-            rect.x = size[0]+numDone*32
-            rect.y = line*32
-            levelEditAssets[terrain] = rect
-            editSurface.blit(im,rect)
-            numDone += 1
-        if numDone == 31:
-            numDone = 0
-            line += 1
-        im = pygame.image.load("assets/eraser.png")
-        rect = im.get_rect()
-        rect.x = size[0]+numDone*32
-        rect.y = line*32
-        levelEditAssets["eraser"] = rect
-        editSurface.blit(im,rect)
-        im = pygame.image.load("assets/save.png")
-        rect = im.get_rect()
-        rect.topleft = [1516,672]
-        levelEditAssets["save"] = rect
-        previousMouse = pygame.mouse.get_pressed(3)
-        editSurface.blit(im,rect)
+        levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, editCoords, levelEdit
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys
+    collectedKeys = 0
 
     play = not levelEdit
 
@@ -495,12 +456,12 @@ def reset():
 
     for sprite in levelData["sprites"]:
         if levelEdit:
-            editCoords[str(sprite["pos"])] = [None,sprite]
+            levelEdit.editCoords[str(sprite["pos"])] = [None,sprite]
         loadSpriteOrTerrain(sprite,"sprite")
 
     for terrain in levelData["terrain"]:
         if levelEdit:
-            editCoords[str(terrain["pos"])] = [None,terrain]
+            levelEdit.editCoords[str(terrain["pos"])] = [None,terrain]
         loadSpriteOrTerrain(terrain,"terrain")
 
     keyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
@@ -523,61 +484,8 @@ def loadSpriteOrTerrain(data,stype):
             data["animations"] = vars.animations[data["animation"]]
         Terrain(**data)
 
-def levelEditor():
-    global selected, selectedIm, prevGridPos, editCoords, levelEditAssets, play, previousMouse
-    if selected in levelEditAssets.keys():
-        selectedIm[1].x = levelEditAssets[selected].x
-        selectedIm[1].y = levelEditAssets[selected].y
-        screen.blit(selectedIm[0],selectedIm[1])
-    mouse = pygame.mouse.get_pressed(3)
-    if any(mouse):
-        mouseRect = pygame.Rect(pygame.mouse.get_pos()[0]+12,pygame.mouse.get_pos()[1]+12,1,1)
-        clicked = mouseRect.collidelist(list(levelEditAssets.values()))
-        if clicked != -1 and mouse[0]:
-            if list(levelEditAssets.keys())[clicked] == "save":
-                if not previousMouse[0]:
-                    with open("out.json","w+") as f:
-                        json.dump(levelData,f,indent=4)
-                previousMouse = mouse
-                return
-            selected = list(levelEditAssets.keys())[clicked]
-            prevGridPos = [-1,-1]
-        else:
-            if (mouseRect.x <= size[0] and selected) and mouse[0]:
-                gridPos = []
-                gridPos.append(math.floor(mouseRect.x / 64))
-                gridPos.append(math.floor(mouseRect.y / 64))
-                if gridPos != prevGridPos:
-                    prevGridPos = gridPos.copy()
-                    gridPos[0] = gridPos[0]*64
-                    gridPos[1] = gridPos[1]*64
-                    if (str(gridPos) in editCoords):
-                        if [terrain for terrain in terrains if [terrain.rect.x,terrain.rect.y] == gridPos]:
-                            terrainSurface.fill((0,0,0,0),editCoords[str(gridPos)][0].rect)
-                            terrains.remove([terrain for terrain in terrains if [terrain.rect.x,terrain.rect.y] == gridPos][0])
-                        elif [sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == gridPos]:
-                            sprites.remove([sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == gridPos][0])
-                        if editCoords[str(gridPos)][1] in levelData["terrain"]:
-                            levelData["terrain"].remove(editCoords[str(gridPos)][1])
-                        elif editCoords[str(gridPos)][1] in levelData["sprites"]:
-                            levelData["sprites"].remove(editCoords[str(gridPos)][1])
-                        editCoords.pop(str(gridPos))
-                    if selected == "eraser":
-                        return
-                    if selected in vars.sprites:
-                        levelData["sprites"].append({"image":vars.images[vars.sprites[selected]]["idle"],"extraImages": vars.sprites[selected],"assetPath":selected,"pos":gridPos})
-                        editCoords[str(gridPos)] = [None,levelData["sprites"][-1]]
-                        loadSpriteOrTerrain({"image":vars.images[vars.sprites[selected]]["idle"],"extraImages": vars.sprites[selected],"assetPath":selected,"pos":gridPos},"sprite")
-                    if selected in vars.terrains:
-                        levelData["terrain"].append({"image":vars.images[vars.terrains[selected]][0],"assetPath":selected,"pos":gridPos})
-                        editCoords[str(gridPos)] = [None,levelData["terrain"][-1]]
-                        loadSpriteOrTerrain({"image":vars.images[vars.terrains[selected]][0],"assetPath":selected,"pos":gridPos},"terrain")
-    if pygame.key.get_pressed()[pygame.K_p]:
-        play = True
-    previousMouse = mouse
-
 def update(tick):
-    global clock, play
+    global clock, play, levelData, sprites, terrains, terrainSurface, collectedKeys
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit() # SYS
@@ -605,8 +513,10 @@ def update(tick):
     screen.blit(terrainSurface,(24,24),special_flags=pygame.BLEND_MAX) # THIS IS WHERE SCREEN SCROLL WOULD GO!
 
     if levelEdit and not play:
-        screen.blit(editSurface,(0,0),special_flags=pygame.BLEND_ADD)
-        levelEditor()
+        screen.blit(levelEdit.editSurface,(0,0),special_flags=pygame.BLEND_ADD)
+        selectedIm,play = levelEdit.update(levelData,sprites,terrains,terrainSurface,loadSpriteOrTerrain)
+        if selectedIm:
+            screen.blit(selectedIm[0],selectedIm[1])
 
     for sprite in sorted(sprites[1:]): # SPRITES
         if play:
@@ -630,6 +540,8 @@ def update(tick):
 
     font = pygame.font.SysFont("Arial",20)
 
+    text = font.render(f"Keys: {collectedKeys}/{levelData['level']['keys']}",True,(255,255,255))
+    screen.blit(text,text.get_rect())
     if debug and sprites[0].extraArgs["player"]:
         text = font.render(f"Frame: {frameN} ps {clock.get_fps():.2f} | Pos: x {sprites[0].rect.x} y {sprites[0].rect.y} | Dir: {sprites[0].direction} pr {sprites[0].projected_direction} | Edges: T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | Speed: f {sprites[0].fSpeed} - {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",True,(255,0,0))
         text_rect = text.get_rect()

@@ -28,13 +28,16 @@ images = {
 
 animations = {
     "player": {
-            "collide": [0,"confuzzled0","confuzzled1","confuzzled2","confuzzled3","confuzzled4","idle"],
-            "death": [60,"death0","death1","death2","death3","death4","death5"],
-            "look": [600,"look{}f0","look{}f1"],
-            "go": [-1,"go{}f0","go{}f1","go{}f2"],
-            "celebrate": [300,"celebrate0","celebrate1","celebrate2"],
-            "reset": [0],
-        },
+        "collide": [0,"confuzzled0","confuzzled1","confuzzled2","confuzzled3","confuzzled4","idle"],
+        "death": [60,"death0","death1","death2","death3","death4","death5"],
+        "look": [600,"look{}f0","look{}f1"],
+        "go": [-1,"go{}f0","go{}f1","go{}f2"],
+        "celebrate": [300,"celebrate0","celebrate1","celebrate2"],
+        "reset": [0],
+    },
+    "goal": {
+        "unlock": [0,"locked","idle"]
+    }
 
 }
 
