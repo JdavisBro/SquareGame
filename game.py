@@ -86,14 +86,17 @@ class Sprite:
         animations=None,weight=0
         ):
         global levelEdit
-        if animations:
-            self.animations = vars.animations[animations]
-            self.set_animation("idle")
-        else:
-            self.animations = None
         self.aliveFrames = 0
         self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False,"blitImage":None} # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
+        if animations:
+            self.animations = vars.animations[animations]
+            if "idle" in self.animations:
+                self.set_animation("idle")
+            else:
+                self.set_animation("a")
+        else:
+            self.animations = None
         self.rect = None
         if isinstance(list(vars.images[extraImages].values())[0],str):
             for im in vars.images[extraImages]:
@@ -162,7 +165,7 @@ class Sprite:
             self.animationFrame = 0
             if self.animationTimeout[1]:
                 self.animationTimeout[1] = False
-                self.animation = self.animations["idle"]
+                self.set_animation("idle")
         else:
             if self.animationFrames % self.animationTime == 0:
                 self.image = self.images[self.animation[self.animationFrame]]
@@ -189,9 +192,6 @@ class Sprite:
             else:
                 self.animationEnd = self.animations[anim][2]
         else:
-            if anim != "reset":
-                if self.extraArgs["goal"]:
-                    print(f"uuhh, animation '{anim}' asked for but not found (issue???)")
             self.animation = []
 
     def kill(self):

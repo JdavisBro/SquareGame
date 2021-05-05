@@ -63,7 +63,7 @@ animations = {
     },
     "goal": {
         "unlock": (0,["locked","idle"],[]),
-        "idle": (-1,["idle"],[])
+        "reset": (-1,["idle"],[])
     },
     "triangle": {
         "idle": (10,["idle","idle1","idle2","idle3"],[]),
