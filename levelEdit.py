@@ -52,9 +52,9 @@ class LevelEditor():
                         if self.selected == "eraser":
                             return self.selectedIm,False
                         if self.selected in vars.sprites:
-                            levelData["sprites"].append({"image":vars.images[vars.sprites[self.selected]]["idle"],"extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos})
+                            levelData["sprites"].append({"image":"idle","extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos})
                             self.editCoords[str(gridPos)] = [None,levelData["sprites"][-1]]
-                            loadSpriteOrTerrain({"image":vars.images[vars.sprites[self.selected]]["idle"],"extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos},"sprite")
+                            loadSpriteOrTerrain({"image":"idle","extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos},"sprite")
                         if self.selected in vars.terrains:
                             levelData["terrain"].append({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos})
                             self.editCoords[str(gridPos)] = [None,levelData["terrain"][-1]]
@@ -82,9 +82,11 @@ class LevelEditor():
             if numDone == 31:
                 numDone = 0
                 line += 1
-            im = pygame.image.load(sprite+(vars.images[vars.sprites[sprite]]["idle"]))
-            rect = im.get_rect()
-            im = pygame.transform.scale(im,(rect.width*2,rect.height*2))
+            if not isinstance(vars.images[vars.sprites[sprite]]["idle"],pygame.Surface):
+                im = pygame.image.load(sprite+(vars.images[vars.sprites[sprite]]["idle"]))
+            else:
+                im = vars.images[vars.sprites[sprite]]["idle"]
+            im = pygame.transform.scale(im,(32,32))
             rect = im.get_rect()
             rect.x = screenSize[0]+32+numDone*32
             rect.y = line*32

@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+import random
 
 # External
 import pygame
@@ -26,7 +27,7 @@ else:
 
 pygame.display.set_caption("Game.")
 
-icon = pygame.image.load("assets/guy/lookRight2.png")
+icon = pygame.image.load("assets/icon.png")
 
 pygame.display.set_icon(icon)
 
@@ -47,7 +48,7 @@ def bind(value,upper,lower):
     return value, False
 
 class Terrain:
-    def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",scale=4,animation=[]):
+    def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",scale=4,animation=None):
         global levelEdit
         self.image = pygame.image.load(assetPath+image)
         self.rect = self.image.get_rect()
@@ -56,6 +57,7 @@ class Terrain:
         self.rect.x = pos[0]
         self.rect.y = pos[1]
         if animation:
+            animation = vars.animations[animation]
             self.animation = [pygame.transform.scale(pygame.image.load(assetPath+im),(self.rect.width,self.rect.height)) for im in animation]
         else:
             self.animation = None
@@ -80,27 +82,33 @@ class Terrain:
 class Sprite:
     def __init__(
         self,image,pos=[0,0],assetPath="assets/",scale=4,
-        extraImages={},extraArgs={},
-        animations=[],weight=0
+        extraImages="default",extraArgs={},
+        animations=None,weight=0
         ):
         global levelEdit
-        self.image = pygame.image.load(assetPath+image) # Image & Rect
-        self.rect = self.image.get_rect()
-        self.image = pygame.transform.scale(self.image,(self.rect.width*scale,self.rect.height*scale))
+        if animations:
+            self.animations = vars.animations[animations]
+            self.set_animation("idle")
+        else:
+            self.animations = None
+        self.aliveFrames = 0
+        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False,"blitImage":None} # Default Args
+        self.extraArgs.update(extraArgs) # Add args to defaults
+        self.rect = None
+        if isinstance(list(vars.images[extraImages].values())[0],str):
+            for im in vars.images[extraImages]:
+                img = pygame.image.load(assetPath+vars.images[extraImages][im])
+                if not self.rect:
+                    self.rect = img.get_rect()
+                vars.images[extraImages][im] = pygame.transform.scale(img,(self.rect.width*scale,self.rect.height*scale))
+        self.images = vars.images[extraImages]
+        self.image = self.images[image]
+        if self.extraArgs["blitImage"]:
+            self.image = self.image.copy()
+            self.image.blit(self.images[self.extraArgs["blitImage"]],(0,0))
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
-        self.images = {} # Animations
-        self.animations = animations
-        self.set_animation("reset")
-        self.aliveFrames = 0
-        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False} # Default Args
-        self.extraArgs.update(extraArgs) # Add args to defaults
-        if extraImages:
-            self.images["idle"] = self.image
-            for im in extraImages:
-                if im != "idle":
-                    self.images[im] = pygame.transform.scale(pygame.image.load(assetPath+extraImages[im]),(self.rect.width,self.rect.height))
         self.weight = weight
         sprites.append(self)
         if levelEdit:
@@ -123,7 +131,9 @@ class Sprite:
         return binds
 
     def do_animations(self):
-        global goMainMenu
+        global goMainMenu,levelChange,levelName
+        if not self.animations or not self.animation:
+            return
         if self.animationFrame >= len(self.animation):
             if not self.animationTimeout[1] and self.animationTimeout[0] != -1:
                 self.animationTimeout[1] = True
@@ -133,12 +143,26 @@ class Sprite:
             if self.extraArgs["dead"] and self.extraArgs["player"]:
                 reset()
             if self.extraArgs["won"]:
-                goMainMenu = True
+                if levelEdit:
+                    reset()
+                elif levels.index(levelName) == len(levels)-1:
+                    goMainMenu = True
+                else:
+                    levelName = levels[levels.index(levelName)+1]
+                    menu.get_widget("levelSelect").set_value(levelName)
+                    levelChange = True
+            if self.animationEnd:
+                self.animation = self.animationEnd
+                self.animationEnd = []
+                self.animationFrame = 0
+                self.animationFrames = 0
+                self.animationTimeout = [-1,False]
+                return
             self.animation = []
             self.animationFrame = 0
             if self.animationTimeout[1]:
                 self.animationTimeout[1] = False
-                self.image = self.images["idle"]
+                self.animation = self.animations["idle"]
         else:
             if self.animationFrames % self.animationTime == 0:
                 self.image = self.images[self.animation[self.animationFrame]]
@@ -146,18 +170,24 @@ class Sprite:
             self.animationFrames += 1
 
     def set_animation(self,anim,args=None):
+        if not self.animations:
+            return
         self.animationFrame = 0
         self.animationFrames = 0
         self.animationTime = 10
         self.animationTimeout = [0,False]
+        self.animationEnd = []
         if anim in self.animations:
             args = str(args)
             self.animationTimeout = [self.animations[anim][0],False]
             if args:
-                self.animation = [frame.format(args) for frame in self.animations[anim][1:]]
+                self.animation = [frame.format(args) for frame in self.animations[anim][1]]
             else:
-                self.animation = self.animations[anim][1:]
-
+                self.animation = self.animations[anim][1]
+            if args:
+                self.animationEnd = [frame.format(args) for frame in self.animations[anim][2]]
+            else:
+                self.animationEnd = self.animations[anim][2]
         else:
             if anim != "reset":
                 if self.extraArgs["goal"]:
@@ -174,8 +204,8 @@ class Sprite:
 class PlayerSprite(Sprite):
     def __init__(
         self,image,pos=[0,0],assetPath="assets/",scale=4,
-        acceleration=0.25,extraImages={},extraArgs={},
-        animations=[],weight=0
+        acceleration=0.25,extraImages="default",extraArgs={},
+        animations=None,weight=0
         ):
         super().__init__(image,pos,assetPath,scale,extraImages,extraArgs,animations,weight)
         self.speed = [0,0] # Speed
@@ -187,8 +217,12 @@ class PlayerSprite(Sprite):
 
 
     def update(self,tick):
-        if not self.extraArgs["dead"]:
-            player = self.extraArgs["player"]-1
+        player = self.extraArgs["player"]-1
+        if keyboard[player]["pause"]:
+            pause()
+        if newKeyboard[player]["reset"]:
+            reset()
+        if not self.extraArgs["dead"] and not self.extraArgs["won"]:
             if keyboard[player]["up"]:
                 self.projected_direction = 0
             elif keyboard[player]["down"]:
@@ -203,7 +237,7 @@ class PlayerSprite(Sprite):
                     self.set_animation("look",self.direction)
                 if keyboard[player]["action"] and (self.direction is not None):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
-                    rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],s.extraArgs["goal"]))] + [t.rect for t in terrains]
+                    rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],(s.extraArgs["goal"] and not s.extraArgs["locked"])))] + [t.rect for t in terrains]
                     collides = movedRect.collidelistall(rects)
                     if (terrainSurface.get_rect().contains(movedRect)) and not collides:
                         self.fSpeed = 40
@@ -211,8 +245,8 @@ class PlayerSprite(Sprite):
                         self.set_animation("go",self.direction)
                     else:
                         self.image = self.images["idle"]
-            if keyboard[player]["pause"]:
-                pause()
+                        self.direction = None
+                        self.projected_direction = None
             accel = self.acceleration*tick
             if self.fSpeed:
                 if self.direction == 0: #up
@@ -235,14 +269,12 @@ class PlayerSprite(Sprite):
             binds.append(binded)
             binds = self.collisions(binds)
             if any(binds):
-                if self.extraArgs["pushed"]:
-                    self.kill()
                 self.speed = [0,0]
                 self.fSpeed = 0
                 if not self.animation:
                     self.set_animation("collide")
             self.startup -= 0.5 if self.startup > 1 else 0
-            self.extraArgs["pushed"] = False
+            self.extraArgs["pushed"] = None
         super().update(tick)
 
     def collisions(self,binds):
@@ -291,21 +323,26 @@ class PlayerSprite(Sprite):
 
 class PathSprite(Sprite):
     def __init__(self,image,pos=[0,0],assetPath="assets/",scale=4,
-        acceleration=0.25,extraImages={},extraArgs={},
-        animations=[],weight=0
+        acceleration=0.25,extraImages="default",extraArgs={},
+        animations=None,weight=0
         ):
         super().__init__(image,pos,assetPath,scale,extraImages,extraArgs,animations,weight)
         self.pathIndex = 0
         self.startup = self.extraArgs["pathStartup"]
+        self.startupImmunity = 0
         self.pathIndexDir = 0
         self.pathCooldown = self.extraArgs["pathCooldown"]
+        self.moving = None
 
     def update(self,tick):
         if self.pathCooldown:
             self.pathCooldown -= 1
             return
         pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
-        movement = self.extraArgs["pathSpeed"]/self.startup*tick
+        if self.startupImmunity == 0:
+            movement = self.extraArgs["pathSpeed"]/self.startup*tick
+        else:
+            movement = self.extraArgs["pathSpeed"]*tick
         move = [0,0]
         if pathDifference[0] > 0:
             if pathDifference[0] <= movement:
@@ -328,6 +365,24 @@ class PathSprite(Sprite):
             else:
                 move[1] = movement*-1
         self.rect = self.rect.move(move)
+        if ((move[0] if move[0] > 0 else move[0]*-1) > (move[1] if move[1] > 0 else move[1]*-1)):
+            if move[0] >= 0:
+                direction = 1
+            else:
+                direction = 3
+        else:
+            if move[1] >= 0:
+                direction = 2
+            else:
+                direction = 0
+        if (not move[0] and not move[1]):
+            direction = None
+        if self.moving != direction:
+            self.moving = direction
+            if self.moving is not None:
+                self.set_animation("go",self.moving)
+            else:
+                self.set_animation("reset")
         if not move[0] and not move[1]:
             if self.pathIndex == 0 and self.pathIndexDir == 1:
                 self.pathIndexDir = 0
@@ -336,7 +391,11 @@ class PathSprite(Sprite):
             self.startup = self.extraArgs["pathStartup"]
             self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
             self.pathCooldown = self.extraArgs["pathCooldown"]
-        self.startup -= 0.5 if self.startup > 1 else 0
+        self.startupImmunity -= 1 if self.startupImmunity > 0 else 0
+        if self.startup > 1:
+            self.startup -= 0.5
+            if self.startup <= 1:
+                self.startupImmunity = 90
         self.collisions(move)
         super().update(tick)
 
@@ -360,15 +419,28 @@ class PathSprite(Sprite):
                             spritesNoMe[collision].rect.top = self.rect.bottom
                         else:
                             spritesNoMe[collision].rect.bottom = self.rect.top
-                    #5spritesNoMe[collision].extraArgs["pushed"] = True
+                    binds = []
+                    spritesNoMe[collision].rect.top,binded = bind(spritesNoMe[collision].rect.top,size[1],0)
+                    binds.append(binded)
+                    spritesNoMe[collision].rect.left,binded = bind(spritesNoMe[collision].rect.left,size[0],0)
+                    binds.append(binded)
+                    spritesNoMe[collision].rect.bottom,binded = bind(spritesNoMe[collision].rect.bottom,size[1],0)
+                    binds.append(binded)
+                    spritesNoMe[collision].rect.right,binded = bind(spritesNoMe[collision].rect.right,size[0],0)
+                    binds.append(binded)
+                    if spritesNoMe[collision].rect.collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
+                        binds.append(True)
+                    if any(binds):
+                        spritesNoMe[collision].kill()
 
 def start():
-    global clock,frameN,goMainMenu,levelName
+    global clock,frameN,goMainMenu,levelName,levelChange
     if not levelName:
         return
     reset_level()
     reset()
     goMainMenu = False
+    levelChange = False
     while 1:
         if pauseMenu.is_enabled():
             pauseMenu.update(pygame.event.get())
@@ -379,6 +451,10 @@ def start():
         else:
             tick = clock.tick(120)
             update(tick)
+        if levelChange:
+            reset_level()
+            reset()
+            levelChange = False
         frameN += 1
         pygame.display.flip()
 
@@ -411,11 +487,13 @@ def reset_level():
 
     x = 0
     y = 0
-    tile = pygame.image.load(f"assets/background/{levelData['level']['background']}.png")
-    tile = pygame.transform.scale(tile,(64,64))
+    tiles = []
+    for tile in levelData['level']['background']:
+        tile = pygame.image.load(f"assets/background/{tile}.png")
+        tiles.append(pygame.transform.scale(tile,(64,64)))
     while y<levelData['level']['size'][1]*64:
         while x<levelData['level']['size'][0]*64:
-            staticSurface.blit(tile,(x+24,y+24))
+            staticSurface.blit(random.choice(tiles),(x+24,y+24))
             x += 64
         x = 0
         y += 64
@@ -443,7 +521,11 @@ def reset_level():
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, blankKeyboard, newKeyboard
+
+    if pauseMenu.is_enabled():
+        pauseMenu.disable()
+
     collectedKeys = 0
 
     play = not levelEdit
@@ -464,28 +546,24 @@ def reset():
             levelEdit.editCoords[str(terrain["pos"])] = [None,terrain]
         loadSpriteOrTerrain(terrain,"terrain")
 
-    keyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
+    blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
+    keyboard = blankKeyboard
+    newKeyboard = blankKeyboard
 
 def loadSpriteOrTerrain(data,stype):
     data = data.copy()
     if stype == "sprite":
-        if "extraImages" in data.keys():
-            if type(data["extraImages"]) == str:
-                data["extraImages"] = vars.images[data["extraImages"]]
-        if "animations" in data.keys():
-            if type(data["animations"]) == str:
-                data["animations"] = vars.animations[data["animations"]]
         spritetype = spriteTypes[data.get("type","none")]
         if "type" in data.keys():
             data.pop("type")
         spritetype(**data)
     else:
-        if "animation" in data.keys():
-            data["animations"] = vars.animations[data["animation"]]
         Terrain(**data)
 
 def update(tick):
     global clock, play, levelData, sprites, terrains, terrainSurface, collectedKeys
+
+    newKeyboard = blankKeyboard
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit() # SYS
@@ -494,10 +572,12 @@ def update(tick):
             for i in range(len(vars.binds)):
                 if event.key in vars.binds[i]:
                     keyboard[i][vars.binds[i][event.key]] = True
+                    newKeyboard[i][vars.binds[i][event.key]] = True
         if event.type == pygame.KEYUP:
             for i in range(len(vars.binds)):
                 if event.key in vars.binds[i]:
                     keyboard[i][vars.binds[i][event.key]] = False
+                    newKeyboard[i][vars.binds[i][event.key]] = False
     
     screen.fill((0,0,0))
 
@@ -506,11 +586,12 @@ def update(tick):
             play = False
             reset()
 
-    [terrain.do_animation() for terrain in terrains if terrain.animation]
+    if not sprites[0].extraArgs["dead"]:
+        [terrain.do_animation() for terrain in terrains if terrain.animation]
     
     screen.blit(staticSurface,(0,0))
 
-    screen.blit(terrainSurface,(24,24),special_flags=pygame.BLEND_MAX) # THIS IS WHERE SCREEN SCROLL WOULD GO!
+    screen.blit(terrainSurface,(24,24),special_flags=pygame.BLEND_RGBA_MAX) # THIS IS WHERE SCREEN SCROLL WOULD GO!
 
     if levelEdit and not play:
         screen.blit(levelEdit.editSurface,(0,0),special_flags=pygame.BLEND_ADD)
@@ -519,7 +600,7 @@ def update(tick):
             screen.blit(selectedIm[0],selectedIm[1])
 
     for sprite in sorted(sprites[1:]): # SPRITES
-        if play:
+        if play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]):
             sprite.update(tick)
         scrollPos = (list(sprite.rect.topleft)[0]+24-0, list(sprite.rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
         screen.blit(sprite.image,scrollPos)
@@ -534,25 +615,23 @@ def update(tick):
     if sprites[0].extraArgs["won"]:
         text = font.render("Congratulations!",True,(255,255,255))
         text_rect = text.get_rect()
-        text_rect.left += 70
-        text_rect.top += 70
-        screen.blit(text,text_rect)
+        screen.blit(text,(70,70))
 
-    font = pygame.font.SysFont("Arial",20)
+    font = pygame.font.SysFont("Arial",30)
 
-    text = font.render(f"Keys: {collectedKeys}/{levelData['level']['keys']}",True,(255,255,255))
-    screen.blit(text,text.get_rect())
+    if levelData['level']['keys']:
+        text = font.render(f"Keys: {collectedKeys}/{levelData['level']['keys']}",True,(255,255,255))
+        screen.blit(text,(0,0))
+
     if debug and sprites[0].extraArgs["player"]:
         text = font.render(f"Frame: {frameN} ps {clock.get_fps():.2f} | Pos: x {sprites[0].rect.x} y {sprites[0].rect.y} | Dir: {sprites[0].direction} pr {sprites[0].projected_direction} | Edges: T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | Speed: f {sprites[0].fSpeed} - {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",True,(255,0,0))
-        text_rect = text.get_rect()
-        text_rect.left += 70
-        text_rect.top += 70
-        screen.blit(text,text_rect)
+        screen.blit(text,(0,40))
 
 pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 pauseMenu.add.button('Continue', unpause)
+pauseMenu.add.button('Reset Level', reset)
 pauseMenu.add.button('Main Menu',returnToMainMenu)
-pauseMenu.add.button('Quit', pygame_menu.events.EXIT)
+pauseMenu.add.button('Quit Game', pygame_menu.events.EXIT)
 pauseMenu.disable()
 
 levelName = None
@@ -562,9 +641,10 @@ def select_level(selectedlevel, *args, **kwargs):
     levelName = selectedlevel[0][0]
 
 menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
-menu.add.button('Play', start)
+menu.add.button('Play Game', start)
 levels = list(list(os.walk("levels"))[0][2])
-levels = [(f[:-5],f[:-5]) for f in levels]
-menu.add.dropselect("Level", levels,onchange=select_level)
-menu.add.button('Quit', pygame_menu.events.EXIT)
+levels = [f[:-5] for f in levels]
+levelName = levels[0]
+menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
+menu.add.button('Quit Game', pygame_menu.events.EXIT)
 menu.mainloop(screen)
