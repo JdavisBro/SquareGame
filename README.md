@@ -1,3 +1,6 @@
-# gamingtest
+# Square Game
  
-hi this is a pygame test for something :))
+Play as Square.
+
+This is for college.
+Feedback is appreciated.
