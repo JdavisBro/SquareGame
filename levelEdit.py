@@ -10,12 +10,14 @@ class LevelEditor():
         global screenSize, size
         screenSize = scr
         size = siz
+        self.mousePos = [0,0]
 
     def update(self,levelData,sprites,terrains,terrainSurface,loadSpriteOrTerrain):
         if self.selected in self.levelEditAssets.keys():
             self.selectedIm[1].x = self.levelEditAssets[self.selected].x
             self.selectedIm[1].y = self.levelEditAssets[self.selected].y
         mouse = pygame.mouse.get_pressed(3)
+        self.mousePos = (math.floor((pygame.mouse.get_pos()[0]-24)/64)*64,math.floor((pygame.mouse.get_pos()[1]-24)/64)*64)
         if any(mouse):
             mouseRect = pygame.Rect(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)
             clicked = mouseRect.collidelist(list(self.levelEditAssets.values()))

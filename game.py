@@ -137,6 +137,24 @@ class Sprite:
         global goMainMenu,levelChange,levelName
         if not self.animations or not self.animation:
             return
+        animationChanged = False
+        if not self.extraArgs["player"]:
+            playerNear = self.rect.copy()
+            playerNear.x -= 64
+            playerNear.y -= 64
+            playerNear.width += 64*2
+            playerNear.height += 64*2
+            if playerNear.colliderect(sprites[0].rect):
+                playerNear = True
+                if "playerNear" in self.animations and self.animation == self.animations["idle"][1]:
+                    self.animation = self.animations["playerNear"][1]
+                    animationChanged = True
+            else:
+                playerNear = False
+                if "playerNear" in self.animations:
+                    if self.animation == self.animations["playerNear"][1]:
+                        self.animation = self.animations["idle"][1]
+                        animationChanged = True
         if self.animationFrame >= len(self.animation):
             if not self.animationTimeout[1] and self.animationTimeout[0] != -1:
                 self.animationTimeout[1] = True
@@ -145,6 +163,8 @@ class Sprite:
                 return
             if self.extraArgs["dead"] and self.extraArgs["player"]:
                 reset()
+            if self.extraArgs["dead"] and self in sprites:
+                sprites.remove(self)
             if self.extraArgs["won"]:
                 if levelEdit:
                     reset()
@@ -165,8 +185,15 @@ class Sprite:
             self.animationFrame = 0
             if self.animationTimeout[1]:
                 self.animationTimeout[1] = False
-                self.set_animation("idle")
+                if "playerNear" in self.animations and playerNear:
+                    self.set_animation("playerNear")
+                else:
+                    self.set_animation("idle")
+            if animationChanged:
+                self.image = self.images[self.animation[self.animationFrame]]
         else:
+            if animationChanged:
+                self.image = self.images[self.animation[self.animationFrame]]
             if self.animationFrames % self.animationTime == 0:
                 self.image = self.images[self.animation[self.animationFrame]]
                 self.animationFrame += 1
@@ -178,6 +205,8 @@ class Sprite:
         self.animationFrame = 0
         self.animationFrames = 0
         self.animationTime = 10
+        if anim == "idle" or anim == "playerNear":
+            self.animationTime = 60
         self.animationTimeout = [0,False]
         self.animationEnd = []
         if anim in self.animations:
@@ -195,9 +224,14 @@ class Sprite:
             self.animation = []
 
     def kill(self):
-        if not self.extraArgs["dead"] and self.extraArgs["player"]:
-            self.extraArgs["dead"] = True
-            self.set_animation("death")
+        if self.extraArgs["dead"]:
+            return
+        if self.animations:
+            if "death" in self.animations:
+                self.extraArgs["dead"] = True
+                self.set_animation("death")
+            else:
+                sprites.remove(self)
         else:
             sprites.remove(self)
 
@@ -279,7 +313,7 @@ class PlayerSprite(Sprite):
 
     def collisions(self,binds):
         global collectedKeys
-        spritesNoMe = [sprite for sprite in sprites if sprite != self and sprite.extraArgs["tangable"]]
+        spritesNoMe = [sprite for sprite in sprites if sprite != self and (sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"])]
         rects = [sprite.rect for sprite in spritesNoMe]
         collides = self.rect.collidelistall(rects)
         if collides:
@@ -335,72 +369,73 @@ class PathSprite(Sprite):
         self.moving = None
 
     def update(self,tick):
-        if self.pathCooldown:
-            self.pathCooldown -= 1
-            return
-        pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
-        if self.startupImmunity == 0:
-            movement = self.extraArgs["pathSpeed"]/self.startup*tick
-        else:
-            movement = self.extraArgs["pathSpeed"]*tick
-        move = [0,0]
-        if pathDifference[0] > 0:
-            if pathDifference[0] <= movement:
-                move[0] = pathDifference[0]
+        if not self.extraArgs["dead"]:
+            if self.pathCooldown:
+                self.pathCooldown -= 1
             else:
-                move[0] = movement
-        elif pathDifference[0] < 0:
-            if pathDifference[0] >= movement * -1:
-                move[0] = pathDifference[0]
-            else:
-                move[0] = movement*-1
-        if pathDifference[1] > 0:
-            if pathDifference[1] <= movement:
-                move[1] = pathDifference[1]
-            else:
-                move[1] = movement
-        elif pathDifference[1] < 0:
-            if pathDifference[1] >= movement * -1:
-                move[1] = pathDifference[1]
-            else:
-                move[1] = movement*-1
-        self.rect = self.rect.move(move)
-        if ((move[0] if move[0] > 0 else move[0]*-1) > (move[1] if move[1] > 0 else move[1]*-1)):
-            if move[0] >= 0:
-                direction = 1
-            else:
-                direction = 3
-        else:
-            if move[1] >= 0:
-                direction = 2
-            else:
-                direction = 0
-        if (not move[0] and not move[1]):
-            direction = None
-        if self.moving != direction:
-            self.moving = direction
-            if self.moving is not None:
-                self.set_animation("go",self.moving)
-            else:
-                self.set_animation("reset")
-        if not move[0] and not move[1]:
-            if self.pathIndex == 0 and self.pathIndexDir == 1:
-                self.pathIndexDir = 0
-            elif self.pathIndex == len(self.extraArgs["path"])-1 and self.pathIndexDir == 0:
-                self.pathIndexDir = 1
-            self.startup = self.extraArgs["pathStartup"]
-            self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
-            self.pathCooldown = self.extraArgs["pathCooldown"]
-        self.startupImmunity -= 1 if self.startupImmunity > 0 else 0
-        if self.startup > 1:
-            self.startup -= 0.5
-            if self.startup <= 1:
-                self.startupImmunity = 90
-        self.collisions(move)
+                pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
+                if self.startupImmunity == 0:
+                    movement = self.extraArgs["pathSpeed"]/self.startup*tick
+                else:
+                    movement = self.extraArgs["pathSpeed"]*tick
+                move = [0,0]
+                if pathDifference[0] > 0:
+                    if pathDifference[0] <= movement:
+                        move[0] = pathDifference[0]
+                    else:
+                        move[0] = movement
+                elif pathDifference[0] < 0:
+                    if pathDifference[0] >= movement * -1:
+                        move[0] = pathDifference[0]
+                    else:
+                        move[0] = movement*-1
+                if pathDifference[1] > 0:
+                    if pathDifference[1] <= movement:
+                        move[1] = pathDifference[1]
+                    else:
+                        move[1] = movement
+                elif pathDifference[1] < 0:
+                    if pathDifference[1] >= movement * -1:
+                        move[1] = pathDifference[1]
+                    else:
+                        move[1] = movement*-1
+                self.rect = self.rect.move(move)
+                if ((move[0] if move[0] > 0 else move[0]*-1) > (move[1] if move[1] > 0 else move[1]*-1)):
+                    if move[0] >= 0:
+                        direction = 1
+                    else:
+                        direction = 3
+                else:
+                    if move[1] >= 0:
+                        direction = 2
+                    else:
+                        direction = 0
+                if (not move[0] and not move[1]):
+                    direction = None
+                if (self.moving != direction and 'go' in self.animations):
+                    self.moving = direction
+                    if self.moving is not None:
+                        self.set_animation("go",self.moving)
+                    else:
+                        self.set_animation("reset")
+                if not move[0] and not move[1]:
+                    if self.pathIndex == 0 and self.pathIndexDir == 1:
+                        self.pathIndexDir = 0
+                    elif self.pathIndex == len(self.extraArgs["path"])-1 and self.pathIndexDir == 0:
+                        self.pathIndexDir = 1
+                    self.startup = self.extraArgs["pathStartup"]
+                    self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
+                    self.pathCooldown = self.extraArgs["pathCooldown"]
+                self.startupImmunity -= 1 if self.startupImmunity > 0 else 0
+                if self.startup > 1:
+                    self.startup -= 0.5
+                    if self.startup <= 1:
+                        self.startupImmunity = 90
+                self.collisions(move)
         super().update(tick)
 
     def collisions(self,move):
-        spritesNoMe = [sprite for sprite in sprites if sprite != self and sprite.extraArgs["tangable"]]
+        spritesNoMe = [sprite for sprite in sprites if sprite != self and (sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"])]
         rects = [sprite.rect for sprite in spritesNoMe]
         collides = self.rect.collidelistall(rects)
         if collides:
@@ -428,7 +463,7 @@ class PathSprite(Sprite):
                     binds.append(binded)
                     rects[collision].right,binded = bind(rects[collision].right,size[0],0)
                     binds.append(binded)
-                    if rects[collision].collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
+                    if rects[collision].collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([not s.extraArgs["dead"],s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
                         binds.append(True)
                     if any(binds):
                         spritesNoMe[collision].kill()
@@ -621,6 +656,10 @@ def update(tick):
 
     if levelData['level']['keys']:
         text = font.render(f"Keys: {collectedKeys}/{levelData['level']['keys']}",True,(255,255,255))
+        screen.blit(text,(0,0))
+
+    if levelEdit:
+        text = font.render(str(levelEdit.mousePos),True,(255,255,255))
         screen.blit(text,(0,0))
 
     if debug and sprites[0].extraArgs["player"]:

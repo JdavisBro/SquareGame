@@ -1,0 +1,1104 @@
+{
+    "level": {
+        "border": "brick",
+        "background": [
+            "brick0",
+            "brick1",
+            "brick2",
+            "brick3",
+            "brick4"
+        ],
+        "size": [
+            20,
+            11
+        ],
+        "keys": 2
+    },
+    "sprites": [
+        {
+            "image": "idle",
+            "assetPath": "assets/guy/",
+            "animations": "player",
+            "pos": [
+                64,
+                64
+            ],
+            "type": "player",
+            "extraImages": "player",
+            "extraArgs": {
+                "player": 1,
+                "killable": true
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "redPlayer",
+            "animations": "player",
+            "assetPath": "assets/guy2/",
+            "pos": [
+                192,
+                256
+            ],
+            "type": "path",
+            "extraArgs": {
+                "killable":true,
+                "path": [
+                    [
+                        192,
+                        256
+                    ],
+                    [
+                        448,
+                        256
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                320,
+                128
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        320,
+                        128
+                    ],
+                    [
+                        320,
+                        384
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                448,
+                384
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        448,
+                        384
+                    ],
+                    [
+                        448,
+                        128
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                576,
+                128
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        576,
+                        128
+                    ],
+                    [
+                        576,
+                        384
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "key",
+            "assetPath": "assets/key/",
+            "pos": [
+                256,
+                0
+            ],
+            "extraArgs":{"key":true}
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                384,
+                64
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        384,
+                        64
+                    ],
+                    [
+                        384,
+                        0
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                640,
+                64
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        640,
+                        64
+                    ],
+                    [
+                        640,
+                        0
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                704,
+                384
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        704,
+                        384
+                    ],
+                    [
+                        704,
+                        128
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                1024,
+                64
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        1024,
+                        64
+                    ],
+                    [
+                        1216,
+                        64
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                1024,
+                128
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        1024,
+                        128
+                    ],
+                    [
+                        1216,
+                        128
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                1216,
+                256
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        1216,
+                        256
+                    ],
+                    [
+                        1024,
+                        256
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                1216,
+                320
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        1216,
+                        320
+                    ],
+                    [
+                        1024,
+                        320
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "key",
+            "assetPath": "assets/key/",
+            "pos": [
+                1152,
+                0
+            ],
+            "extraArgs": {"key":true}
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                0,
+                512
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        0,
+                        512
+                    ],
+                    [
+                        128,
+                        512
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                128,
+                512
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        128,
+                        512
+                    ],
+                    [
+                        128,
+                        384
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                128,
+                384
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        128,
+                        384
+                    ],
+                    [
+                        0,
+                        384
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                0,
+                384
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        0,
+                        384
+                    ],
+                    [
+                        0,
+                        512
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "locked",
+            "extraImages": "goal",
+            "animations": "goal",
+            "assetPath": "assets/goal/",
+            "pos": [
+                64,
+                448
+            ],
+            "extraArgs": {"goal":true,"locked":true}
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                256,
+                576
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        256,
+                        576
+                    ],
+                    [
+                        256,
+                        640
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                384,
+                576
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        384,
+                        576
+                    ],
+                    [
+                        384,
+                        640
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                512,
+                576
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        512,
+                        576
+                    ],
+                    [
+                        512,
+                        640
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                640,
+                576
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        640,
+                        576
+                    ],
+                    [
+                        640,
+                        640
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                768,
+                576
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        768,
+                        576
+                    ],
+                    [
+                        768,
+                        640
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                896,
+                576
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        896,
+                        576
+                    ],
+                    [
+                        896,
+                        640
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                512,
+                64
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        512,
+                        64
+                    ],
+                    [
+                        512,
+                        0
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "animations": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                768,
+                64
+            ],
+            "type": "path",
+            "extraArgs": {
+                "kill":true,
+                "path": [
+                    [
+                        768,
+                        64
+                    ],
+                    [
+                        768,
+                        0
+                    ]
+                ],
+                "pathSpeed": 0.5,
+                "pathStartup": 1,
+                "pathCooldown": 60
+            }
+        }
+    ],
+    "terrain": [
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                128,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                64,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                0,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                320,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                576,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                704,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                832,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                64
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                256
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                128
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                320
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                896,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                960,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1088,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                192
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                0
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                576
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1216,
+                640
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                832,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                832,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                768,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                704,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                576,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                320,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                256,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                448
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                192,
+                384
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                384,
+                512
+            ]
+        },
+        {
+            "image": "0.png",
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                0,
+                640
+            ]
+        }
+    ]
+}

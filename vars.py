@@ -66,8 +66,8 @@ animations = {
         "reset": (-1,["idle"],[])
     },
     "triangle": {
-        "idle": (10,["idle","idle1","idle2","idle3"],[]),
-        "mouthOpen": (10,["mouthOpen","mouthOpen1","mouthOpen2","mouthOpen3"],[])
+        "idle": (60,["idle","idle1","idle2","idle3"],[]),
+        "playerNear": (60,["mouthOpen","mouthOpen1","mouthOpen2","mouthOpen3"],[])
     }
 
 }
