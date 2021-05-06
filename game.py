@@ -477,7 +477,7 @@ class Timer():
     def update(self,tick):
         if self.level != levelName:
             self.level = levelName
-            print(self.levelTime + "ms")
+            print(str(self.levelTime) + "ms")
             self.levelTime = 0
         self.time += tick
         self.levelTime += tick
@@ -682,7 +682,7 @@ def update(tick):
 
     timer.update(tick)
 
-    text = font.render(f"L: {timer.levelTime} - O: {timer.time}")
+    text = font.render(f"L: {timer.levelTime} - O: {timer.time}",True,(255,255,255))
     screen.blit(text,(0,700))
 
     if debug and sprites[0].extraArgs["player"]:
