@@ -48,7 +48,7 @@ def bind(value,upper,lower):
     return value, False
 
 class Terrain:
-    def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",scale=4,animation=None):
+    def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",scale=4,animation=None,animations=None):
         global levelEdit
         self.image = pygame.image.load(assetPath+image)
         self.rect = self.image.get_rect()
@@ -57,7 +57,7 @@ class Terrain:
         self.rect.x = pos[0]
         self.rect.y = pos[1]
         if animation:
-            animation = vars.animations[animation]
+            animation = vars.animations[animations][animation]
             self.animation = [pygame.transform.scale(pygame.image.load(assetPath+im),(self.rect.width,self.rect.height)) for im in animation]
         else:
             self.animation = None
@@ -279,8 +279,8 @@ class PlayerSprite(Sprite):
 
     def collisions(self,binds):
         global collectedKeys
-        spritesNoMe = [sprite for sprite in sprites if sprite != self]
-        rects = [sprite.rect for sprite in spritesNoMe if sprite.extraArgs["tangable"]]
+        spritesNoMe = [sprite for sprite in sprites if sprite != self and sprite.extraArgs["tangable"]]
+        rects = [sprite.rect for sprite in spritesNoMe]
         collides = self.rect.collidelistall(rects)
         if collides:
             for collision in collides:
@@ -298,13 +298,13 @@ class PlayerSprite(Sprite):
                 if self.fSpeed:
                     binds.append(True)
                     if self.direction == 0: #up
-                        self.rect.top = spritesNoMe[collision].rect.bottom
+                        self.rect.top = rects[collision].bottom
                     elif self.direction == 1: #right
-                        self.rect.right = spritesNoMe[collision].rect.left
+                        self.rect.right = rects[collision].left
                     elif self.direction == 2: #down
-                        self.rect.bottom = spritesNoMe[collision].rect.top
+                        self.rect.bottom = rects[collision].top
                     elif self.direction == 3: #left
-                        self.rect.left = spritesNoMe[collision].rect.right
+                        self.rect.left = rects[collision].right
                     spritesNoMe[collision].startup = 30
         rects = [terrain.rect for terrain in terrains]
         collides = self.rect.collidelistall(rects)
@@ -400,8 +400,8 @@ class PathSprite(Sprite):
         super().update(tick)
 
     def collisions(self,move):
-        spritesNoMe = [sprite for sprite in sprites if sprite != self]
-        rects = [sprite.rect for sprite in spritesNoMe if sprite.extraArgs["tangable"]]
+        spritesNoMe = [sprite for sprite in sprites if sprite != self and sprite.extraArgs["tangable"]]
+        rects = [sprite.rect for sprite in spritesNoMe]
         collides = self.rect.collidelistall(rects)
         if collides:
             for collision in collides:
@@ -411,24 +411,24 @@ class PathSprite(Sprite):
                 if isinstance(spritesNoMe[collision],PlayerSprite) and not spritesNoMe[collision].extraArgs["dead"]:
                     if ((move[0] if move[0] > 0 else move[0]*-1) > (move[1] if move[1] > 0 else move[1]*-1)):
                         if move[0] >= 0:
-                            spritesNoMe[collision].rect.left = self.rect.right
+                            rects[collision].left = self.rect.right
                         else:
-                            spritesNoMe[collision].rect.right = self.rect.left
+                            rects[collision].right = self.rect.left
                     else:
                         if move[1] >= 0:
-                            spritesNoMe[collision].rect.top = self.rect.bottom
+                            rects[collision].top = self.rect.bottom
                         else:
-                            spritesNoMe[collision].rect.bottom = self.rect.top
+                            rects[collision].bottom = self.rect.top
                     binds = []
-                    spritesNoMe[collision].rect.top,binded = bind(spritesNoMe[collision].rect.top,size[1],0)
+                    rects[collision].top,binded = bind(rects[collision].top,size[1],0)
                     binds.append(binded)
-                    spritesNoMe[collision].rect.left,binded = bind(spritesNoMe[collision].rect.left,size[0],0)
+                    rects[collision].left,binded = bind(rects[collision].left,size[0],0)
                     binds.append(binded)
-                    spritesNoMe[collision].rect.bottom,binded = bind(spritesNoMe[collision].rect.bottom,size[1],0)
+                    rects[collision].bottom,binded = bind(rects[collision].bottom,size[1],0)
                     binds.append(binded)
-                    spritesNoMe[collision].rect.right,binded = bind(spritesNoMe[collision].rect.right,size[0],0)
+                    rects[collision].right,binded = bind(rects[collision].right,size[0],0)
                     binds.append(binded)
-                    if spritesNoMe[collision].rect.collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
+                    if rects[collision].collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
                         binds.append(True)
                     if any(binds):
                         spritesNoMe[collision].kill()
