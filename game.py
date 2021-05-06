@@ -468,6 +468,22 @@ class PathSprite(Sprite):
                     if any(binds):
                         spritesNoMe[collision].kill()
 
+class Timer():
+    def __init__(self):
+        self.levelTime = 0
+        self.level = None
+        self.time = 0
+
+    def update(self,tick):
+        if self.level != levelName:
+            self.level = levelName
+            print(self.levelTime + "ms")
+            self.levelTime = 0
+        self.time += tick
+        self.levelTime += tick
+
+timer = Timer()
+
 def start():
     global clock,frameN,goMainMenu,levelName,levelChange
     if not levelName:
@@ -496,6 +512,7 @@ def start():
 def pause():
     pygame.mouse.set_visible(True)
     keyboard[0]["pause"] = False
+    pauseMenu.get_current().select_widget(pauseMenu.get_widgets()[0])
     pauseMenu.get_current().enable()
 
 def unpause():
@@ -584,6 +601,7 @@ def reset():
     blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
     keyboard = blankKeyboard
     newKeyboard = blankKeyboard
+    timer.levelTime = 0
 
 def loadSpriteOrTerrain(data,stype):
     data = data.copy()
@@ -661,6 +679,11 @@ def update(tick):
     if levelEdit:
         text = font.render(str(levelEdit.mousePos),True,(255,255,255))
         screen.blit(text,(0,0))
+
+    timer.update(tick)
+
+    text = font.render(f"L: {timer.levelTime} - O: {timer.time}")
+    screen.blit(text,(0,700))
 
     if debug and sprites[0].extraArgs["player"]:
         text = font.render(f"Frame: {frameN} ps {clock.get_fps():.2f} | Pos: x {sprites[0].rect.x} y {sprites[0].rect.y} | Dir: {sprites[0].direction} pr {sprites[0].projected_direction} | Edges: T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | Speed: f {sprites[0].fSpeed} - {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",True,(255,0,0))
