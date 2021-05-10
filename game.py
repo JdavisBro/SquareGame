@@ -15,6 +15,8 @@ debug = True if "debug" in sys.argv else False
 
 pygame.init()
 
+print("\n\n")
+
 size = (1280, 704) #playfield
 screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
@@ -166,9 +168,10 @@ class Sprite:
             if self.extraArgs["dead"] and self in sprites:
                 sprites.remove(self)
             if self.extraArgs["won"]:
-                if levelEdit:
+                timer.print_time()
+                if levelEdit or userPrefs["levelCompleteAction"] == 2:
                     reset()
-                elif levels.index(levelName) == len(levels)-1:
+                elif levels.index(levelName) == len(levels)-1 or userPrefs["levelCompleteAction"] == 1:
                     goMainMenu = True
                 else:
                     levelName = levels[levels.index(levelName)+1]
@@ -269,7 +272,7 @@ class PlayerSprite(Sprite):
                 if self.direction != self.projected_direction:
                     self.direction = self.projected_direction
                     self.set_animation("look",self.direction)
-                if keyboard[player]["action"] and (self.direction is not None):
+                if (keyboard[player]["action"] or userPrefs["automaticMovement"] == 1) and (self.direction is not None and frameN != 0):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
                     rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],(s.extraArgs["goal"] and not s.extraArgs["locked"])))] + [t.rect for t in terrains]
                     collides = movedRect.collidelistall(rects)
@@ -469,25 +472,69 @@ class PathSprite(Sprite):
                         spritesNoMe[collision].kill()
 
 class Timer():
-    def __init__(self):
+    def __init__(self,level):
         self.levelTime = 0
-        self.level = None
+        self.level = level
         self.time = 0
+        self.started = 0
 
     def update(self,tick):
+        """Updates the timer."""
+        if (userPrefs["timerStart"] == 1 and self.started != 2):
+            if self.started == 1:
+                self.started = 2
+            return
         if self.level != levelName:
             self.level = levelName
-            print(str(self.levelTime) + "ms")
-            self.levelTime = 0
+            self.level_reset()
         self.time += tick
         self.levelTime += tick
 
-timer = Timer()
+    def level_reset(self):
+        if self.started > 0:
+            self.started = 0
+        self.levelTime = 0
+
+    def start(self):
+        """Starts the timer if it is on first input mode."""
+        if self.started == 0:
+            self.started = 1
+
+    def print_time(self):
+        print(f"Time on level {self.level}: {self.time_readable(self.levelTime)}")
+
+    def time_readable(self,time):
+        """Returns time (ms) as a readable string of "HH:MM:SS.MS"."""
+        if time >= 3600000:
+            hour = time//3600000
+            time -= 3600000*hour
+            hour = ("0" if len(str(hour)) == 1 else "") + str(hour)
+        else:
+            hour = "00"
+        if time >= 60000:
+            minute = time//60000
+            time -= 60000*minute
+            minute = ("0" if len(str(minute)) == 1 else "") + str(minute)
+        else:
+            minute = "00"
+        if time >= 1000:
+            second = time//1000
+            time -= 1000*second
+            second = ("0" if len(str(second)) == 1 else "") + str(second)
+        else:
+            second = "00"
+        time = str(time//10)
+        if time:
+            time = ("0" if len(time) == 1 else "") + time
+        return f"{hour}:{minute}:{second}.{time}"
+        
 
 def start():
-    global clock,frameN,goMainMenu,levelName,levelChange
+    global clock,frameN,goMainMenu,levelName,levelChange,timer
     if not levelName:
         return
+    timer = Timer(levelName)
+    frameN = 0
     reset_level()
     reset()
     goMainMenu = False
@@ -601,7 +648,13 @@ def reset():
     blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
     keyboard = blankKeyboard
     newKeyboard = blankKeyboard
-    timer.levelTime = 0
+
+    if timer.level == levelName:
+        timer.level_reset()
+
+def close():
+    print("\n\n")
+    sys.exit()
 
 def loadSpriteOrTerrain(data,stype):
     data = data.copy()
@@ -619,9 +672,10 @@ def update(tick):
     newKeyboard = blankKeyboard
 
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: sys.exit() # SYS
-        
+        if event.type == pygame.QUIT:
+            close()
         if event.type == pygame.KEYDOWN: # KEY
+            timer.start()
             for i in range(len(vars.binds)):
                 if event.key in vars.binds[i]:
                     keyboard[i][vars.binds[i][event.key]] = True
@@ -658,6 +712,9 @@ def update(tick):
         scrollPos = (list(sprite.rect.topleft)[0]+24-0, list(sprite.rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
         screen.blit(sprite.image,scrollPos)
 
+    if (play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]) and not frameN == 0):
+        timer.update(tick)
+
     if play:
         sprites[0].update(tick)
     scrollPos = (list(sprites[0].rect.topleft)[0]+24-0, list(sprites[0].rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
@@ -680,9 +737,7 @@ def update(tick):
         text = font.render(str(levelEdit.mousePos),True,(255,255,255))
         screen.blit(text,(0,0))
 
-    timer.update(tick)
-
-    text = font.render(f"L: {timer.levelTime} - O: {timer.time}",True,(255,255,255))
+    text = font.render(f"L: {timer.time_readable(timer.levelTime)} - O: {timer.time_readable(timer.time)}",True,(255,255,255))
     screen.blit(text,(0,700))
 
     if debug and sprites[0].extraArgs["player"]:
@@ -697,10 +752,48 @@ pauseMenu.add.button('Quit Game', pygame_menu.events.EXIT)
 pauseMenu.disable()
 
 levelName = None
+if not os.path.exists("userPrefs.json"):
+    with open("defaultUserPrefs.json","r") as f2:
+        userPrefs = json.load(f2)
+    with open("userPrefs.json","w+") as f:
+        json.dump(userPrefs,f,indent=4)
+else:
+    with open("userPrefs.json","r") as f:
+        userPrefs = json.load(f)
 
 def select_level(selectedlevel, *args, **kwargs):
     global levelName
     levelName = selectedlevel[0][0]
+
+def update_prefs():
+    with open("userPrefs.json","w+") as f:
+        json.dump(userPrefs,f,indent=4)
+    apply.set_border(0,(20,150,25))
+
+def light_apply():
+    try:
+        apply.set_border(2,(20,150,25))
+    except:
+        pass #cry
+
+def set_level_complete_action(levelCompleteAction, *args, **kwargs):
+    userPrefs["levelCompleteAction"] = levelCompleteAction[1]
+    light_apply()
+
+def set_timer_start(timerStart, *args, **kwargs):
+    userPrefs["timerStart"] = timerStart[1]
+    light_apply()
+
+def set_automatic_movement(automaticMovement, *args, **kwargs):
+    userPrefs["automaticMovement"] = automaticMovement[1]
+    light_apply()
+
+preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
+preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Input",1)],onchange=set_timer_start,default=userPrefs["timerStart"])
+preferencesMenu.add.selector("Movement ",[("Require Space",0),("On Direction Press",1)],onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
+apply = preferencesMenu.add.button("Apply", update_prefs)
+preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
 menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 menu.add.button('Play Game', start)
@@ -708,5 +801,6 @@ levels = list(list(os.walk("levels"))[0][2])
 levels = [f[:-5] for f in levels]
 levelName = levels[0]
 menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
-menu.add.button('Quit Game', pygame_menu.events.EXIT)
+menu.add.button('Preferences',preferencesMenu)
+menu.add.button('Quit Game', close)
 menu.mainloop(screen)
