@@ -115,11 +115,7 @@ class Sprite:
         self.rect.x = pos[0]
         self.rect.y = pos[1]
         self.weight = weight
-        self.changed = False
-        self.old_rect = None
         sprites.append(self)
-        if self != sprites[0]:
-            spriteSurface.blit(self.image,self.rect)
         if levelEdit:
             levelEdit.editCoords[str(list(self.rect.topleft))][0] = self
 
@@ -127,7 +123,8 @@ class Sprite:
         return (self.weight < other.weight) and (vars.typeHierarchy[self.type] < vars.typeHierarchy[other.type])
 
     def update(self,tick):
-        global collectedKeys, frameN
+        global collectedKeys
+        global frameN
         self.aliveFrames += 1
         if self.extraArgs["goal"] and self.extraArgs["locked"]:
             if collectedKeys >= levelData["level"]["keys"]:
@@ -170,7 +167,6 @@ class Sprite:
                 reset()
             if self.extraArgs["dead"] and self in sprites:
                 sprites.remove(self)
-                spriteSurface.fill((0,0,0,0),self.rect)
             if self.extraArgs["won"]:
                 timer.print_time()
                 if levelEdit or userPrefs["levelCompleteAction"] == 2:
@@ -198,15 +194,12 @@ class Sprite:
                     self.set_animation("idle")
             if animationChanged:
                 self.image = self.images[self.animation[self.animationFrame]]
-                self.changed = True
         else:
             if animationChanged:
                 self.image = self.images[self.animation[self.animationFrame]]
-                self.changed = True
             if self.animationFrames % self.animationTime == 0:
                 self.image = self.images[self.animation[self.animationFrame]]
                 self.animationFrame += 1
-                self.changed = True
             self.animationFrames += 1
 
     def set_animation(self,anim,args=None):
@@ -242,10 +235,8 @@ class Sprite:
                 self.set_animation("death")
             else:
                 sprites.remove(self)
-                spriteSurface.fill((0,0,0,0),self.rect)
         else:
             sprites.remove(self)
-            spriteSurface.fill((0,0,0,0),self.rect)
 
 class PlayerSprite(Sprite):
     def __init__(
@@ -263,7 +254,6 @@ class PlayerSprite(Sprite):
 
 
     def update(self,tick):
-        self.old_rect == self.rect
         player = self.extraArgs["player"]-1
         if keyboard[player]["pause"]:
             pause()
@@ -323,8 +313,6 @@ class PlayerSprite(Sprite):
                     self.set_animation("collide")
             self.startup -= 0.5 if self.startup > 1 else 0
             self.extraArgs["pushed"] = None
-        if self.old_rect != self.rect:
-            self.changed = True
         super().update(tick)
 
     def collisions(self,binds):
@@ -385,7 +373,6 @@ class PathSprite(Sprite):
         self.moving = None
 
     def update(self,tick):
-        self.old_rect = self.rect
         if not self.extraArgs["dead"]:
             if self.pathCooldown:
                 self.pathCooldown -= 1
@@ -450,8 +437,6 @@ class PathSprite(Sprite):
                         self.startupImmunity = 90
                 self.collisions(move)
         super().update(tick)
-        if self.old_rect != self.rect:
-            self.changed = True
 
     def collisions(self,move):
         spritesNoMe = [sprite for sprite in sprites if sprite != self and (sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"])]
@@ -636,7 +621,7 @@ def reset_level():
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, blankKeyboard, newKeyboard, spriteSurface
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, blankKeyboard, newKeyboard
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -650,8 +635,6 @@ def reset():
     sprites = []
 
     terrainSurface = pygame.Surface(size,flags=pygame.SRCALPHA) 
-
-    spriteSurface = pygame.Surface(size,flags=pygame.SRCALPHA)
 
     for sprite in levelData["sprites"]:
         if levelEdit:
@@ -685,7 +668,7 @@ def loadSpriteOrTerrain(data,stype):
         Terrain(**data)
 
 def update(tick):
-    global play
+    global clock, play, levelData, sprites, terrains, terrainSurface, collectedKeys
 
     newKeyboard = blankKeyboard
 
@@ -727,14 +710,8 @@ def update(tick):
     for sprite in sorted(sprites[1:]): # SPRITES
         if play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]):
             sprite.update(tick)
-    for sprite in sorted([sprite for sprite in sprites[1:] if sprite.changed]):
-        scrollPos = (list(sprite.rect.topleft)[0], list(sprite.rect.topleft)[1])
-        spriteSurface.fill((0,0,0,0),sprite.rect)
-        if sprite.old_rect != None:
-            spriteSurface.fill((0,0,0,0),sprite.old_rect)
-        spriteSurface.blit(sprite.image,scrollPos)
-
-    screen.blit(spriteSurface,(24,24)) # THIS IS WHERE SCREEN SCROLL WOULD GO
+        scrollPos = (list(sprite.rect.topleft)[0]+24-0, list(sprite.rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+        screen.blit(sprite.image,scrollPos)
 
     if (play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]) and not frameN == 0):
         timer.update(tick)
@@ -796,7 +773,7 @@ def update_prefs():
 
 def light_apply():
     try:
-        apply.set_border(4,(20,130,25))
+        apply.set_border(2,(20,150,25))
     except:
         pass #cry
 
