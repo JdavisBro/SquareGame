@@ -259,6 +259,7 @@ class PlayerSprite(Sprite):
             pause()
         if newKeyboard[player]["reset"]:
             reset()
+            return
         if not self.extraArgs["dead"] and not self.extraArgs["won"]:
             if keyboard[player]["up"]:
                 self.projected_direction = 0
