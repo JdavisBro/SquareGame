@@ -11,6 +11,16 @@ import pygame_menu
 # Local
 import vars
 
+if getattr(sys, 'frozen', False):
+    application_path = os.path.dirname(sys.executable)
+elif __file__:
+    application_path = os.path.dirname(__file__)
+
+prefsPath = os.path.join(application_path, "userPrefs.json")
+
+
+os.chdir(getattr(sys,"_MEIPASS","."))
+
 debug = True if "debug" in sys.argv else False
 
 pygame.init()
@@ -673,8 +683,7 @@ def update(tick):
     newKeyboard = blankKeyboard
 
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            close()
+        if event.type == pygame.QUIT: close()
         if event.type == pygame.KEYDOWN: # KEY
             timer.start()
             for i in range(len(vars.binds)):
@@ -753,13 +762,13 @@ pauseMenu.add.button('Quit Game', pygame_menu.events.EXIT)
 pauseMenu.disable()
 
 levelName = None
-if not os.path.exists("userPrefs.json"):
+if not os.path.exists(prefsPath):
     with open("defaultUserPrefs.json","r") as f2:
         userPrefs = json.load(f2)
-    with open("userPrefs.json","w+") as f:
+    with open(prefsPath,"w+") as f:
         json.dump(userPrefs,f,indent=4)
 else:
-    with open("userPrefs.json","r") as f:
+    with open(prefsPath,"r") as f:
         userPrefs = json.load(f)
 
 def select_level(selectedlevel, *args, **kwargs):
@@ -767,7 +776,7 @@ def select_level(selectedlevel, *args, **kwargs):
     levelName = selectedlevel[0][0]
 
 def update_prefs():
-    with open("userPrefs.json","w+") as f:
+    with open(prefsPath,"w+") as f:
         json.dump(userPrefs,f,indent=4)
     apply.set_border(0,(20,150,25))
 
@@ -792,7 +801,7 @@ def set_automatic_movement(automaticMovement, *args, **kwargs):
 preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
 preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Input",1)],onchange=set_timer_start,default=userPrefs["timerStart"])
-preferencesMenu.add.selector("Movement ",[("Require Space",0),("On Direction Press",1)],onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
+preferencesMenu.add.selector("Movement ",[("Require Action Button",0),("On Direction Press",1)],onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
 apply = preferencesMenu.add.button("Apply", update_prefs)
 preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
