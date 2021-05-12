@@ -636,9 +636,10 @@ def reset_level():
     im = pygame.transform.scale(im,(128,64))
     hudSurface.blit(im,(screenSize[0]-128,0))
 
-    im = pygame.image.load("assets/keyCountBg.png")
-    im = pygame.transform.scale(im,(72,26))
-    hudSurface.blit(im,(10,0))
+    if levelData["level"]["keys"]:
+        im = pygame.image.load("assets/keyCountBg.png")
+        im = pygame.transform.scale(im,(72,26))
+        hudSurface.blit(im,(10,0))
 
     if not levelEdit:
         pygame.mouse.set_visible(False)
@@ -694,10 +695,10 @@ def loadSpriteOrTerrain(data,stype):
     else:
         Terrain(**data)
 
-def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialising=False):
+def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialiasing=True):
     if surface is None:
         surface = screen
-    text = fonts[font].render(text,True,colour)
+    text = fonts[font].render(text,antialiasing,colour)
     surface.blit(text,pos)
 
 def update(tick):
@@ -759,7 +760,7 @@ def update(tick):
         font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
     if levelData['level']['keys']:
-        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,1),(25,25,25))
+        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,1),(25,25,25),antialiasing=False)
 
     if levelEdit:
         font_render("munro24",str(levelEdit.mousePos),(90,0))
@@ -776,10 +777,27 @@ def update(tick):
 
     if debug and sprites[0].extraArgs["player"]:
         debugTextBg.fill((0,0,0))
-        font_render("munro16",f"F {frameN} PS {clock.get_fps():.2f} T {tick} x {sprites[0].rect.x} y {sprites[0].rect.y} fa {sprites[0].direction} p {sprites[0].projected_direction} T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | s {sprites[0].fSpeed} {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",(1,-1),(255,255,255),surface=debugTextBg)
+        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(sprites[0].rect.x)} y {add_zeros(sprites[0].rect.y)} dir {add_zeros(sprites[0].direction,0)} pro {add_zeros(sprites[0].projected_direction,0)} T {add_zeros(sprites[0].rect.top)} L {add_zeros(sprites[0].rect.left)} R {add_zeros(sprites[0].rect.right)} B {add_zeros(sprites[0].rect.bottom)} | s {add_zeros(sprites[0].fSpeed,1)} {add_zeros(sprites[0].speed[0],1)} {add_zeros(sprites[0].speed[1],1)} su {add_zeros(sprites[0].startup,1)} | Ani: {add_zeros(sprites[0].animationFrame)} {sprites[0].animation}",(4,0),(255,255,255),surface=debugTextBg) # The speed values and negetive numbers are kinda fucked but i dont care.
+        font_render("consolas10",f"{sprites[0].extraArgs}",(4,10),(255,255,255),surface=debugTextBg)
         screen.blit(debugTextBg,(0,730))
 
-pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+def add_zeros(text,zeros=4):
+    if text is None:
+        if zeros == 0:
+            return "N"
+        text = "NA"
+    text = str(text)
+    return '0'*bind((len(text)-4)*-1,zeros,0)[0] + text
+
+fonts = {} # FONTS
+
+for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fonts/munro/small.ttf",18),("munro32","assets/fonts/munro/regular.ttf",32)]:
+    fonts[f[0]] = pygame.font.Font(f[1],f[2])
+
+for f in [("arial60","arial",60),("consolas10","consolas",10)]: # May be exclusive to windows so perhaps check.
+    fonts[f[0]] = pygame.font.SysFont(f[1],f[2])
+
+pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # PAUSE MENU
 pauseMenu.add.button('Continue', unpause)
 pauseMenu.add.button('Reset Level', reset)
 pauseMenu.add.button('Main Menu',returnToMainMenu)
@@ -787,7 +805,12 @@ pauseMenu.add.button('Quit Game', pygame_menu.events.EXIT)
 pauseMenu.disable()
 
 levelName = None
-if not os.path.exists(prefsPath):
+
+def select_level(selectedlevel, *args, **kwargs):
+    global levelName
+    levelName = selectedlevel[0][0]
+
+if not os.path.exists(prefsPath): # userPrefs and preferences menu
     with open("defaultUserPrefs.json","r") as f2:
         userPrefs = json.load(f2)
     with open(prefsPath,"w+") as f:
@@ -795,10 +818,6 @@ if not os.path.exists(prefsPath):
 else:
     with open(prefsPath,"r") as f:
         userPrefs = json.load(f)
-
-def select_level(selectedlevel, *args, **kwargs):
-    global levelName
-    levelName = selectedlevel[0][0]
 
 def update_prefs():
     with open(prefsPath,"w+") as f:
@@ -843,15 +862,7 @@ def set_automatic_movement(automaticMovement, *args, **kwargs):
     userPrefs["automaticMovement"] = automaticMovement[1]
     light_apply()
 
-fonts = {}
-
-for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fonts/munro/small.ttf",18),("munro16","assets/fonts/munro/small.ttf",16),("munro32","assets/fonts/munro/regular.ttf",32)]:
-    fonts[f[0]] = pygame.font.Font(f[1],f[2])
-
-for f in [("arial60","arial",60)]:
-    fonts[f[0]] = pygame.font.SysFont(f[1],f[2])
-
-blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
+blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}] # controls and controls menu
 
 def refresh_binds():
     global binds
@@ -902,7 +913,7 @@ inputMode = []
 applies = []
 disgards = []
 
-controlsMenu = pygame_menu.Menu("Controls.",screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+controlsMenu = pygame_menu.Menu("Controls.",screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up controls menu
 [controlsMenu.add.button(f"{bind} | {pygame.key.name(userPrefs['binds'][bind])}",start_input_mode,bind,userPrefs['binds'][bind],button_id=f"bind{bind}") for bind in blankKeyboard[0]]
 controlsMenu.add.vertical_margin(40)
 applies.append(controlsMenu.add.button("Apply", update_prefs))
@@ -911,7 +922,7 @@ controlsMenu.add.button("Default", default_controls)
 controlsMenu.add.button("Back", pygame_menu.events.BACK)
 
 
-preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up preferences menu
 preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],selector_id="levelCompleteAction",onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
 preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Input",1)],selector_id="timerStart",onchange=set_timer_start,default=userPrefs["timerStart"])
 preferencesMenu.add.selector("Movement ",[("Require Action Button",0),("On Direction Press",1)],selector_id="automaticMovement",onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
@@ -921,7 +932,7 @@ applies.append(preferencesMenu.add.button("Apply", update_prefs))
 disgards.append(preferencesMenu.add.button("Disgard", disgard))
 preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
-menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up main menu
 menu.add.button('Play Game', start)
 levels = list(list(os.walk("levels"))[0][2])
 levels = [f[:-5] for f in levels if f.endswith(".json")]
@@ -930,7 +941,7 @@ menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,drops
 menu.add.button('Preferences',preferencesMenu)
 menu.add.button('Quit Game', close)
 
-while 1:
+while 1: # Main menu loop (with control input features)
     if not inputMode:
         menu.update(pygame.event.get())
     else:
