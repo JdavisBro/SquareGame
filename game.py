@@ -646,7 +646,7 @@ def reset_level():
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, blankKeyboard, newKeyboard, debugTextBg
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -671,7 +671,6 @@ def reset():
             levelEdit.editCoords[str(terrain["pos"])] = [None,terrain]
         loadSpriteOrTerrain(terrain,"terrain")
 
-    blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
     keyboard = blankKeyboard
     newKeyboard = blankKeyboard
 
@@ -710,15 +709,15 @@ def update(tick):
         if event.type == pygame.QUIT: close()
         if event.type == pygame.KEYDOWN: # KEY
             timer.start()
-            for i in range(len(vars.binds)):
-                if event.key in vars.binds[i]:
-                    keyboard[i][vars.binds[i][event.key]] = True
-                    newKeyboard[i][vars.binds[i][event.key]] = True
+            for i in range(len(binds)):
+                if event.key in binds[i]:
+                    keyboard[i][binds[i][event.key]] = True
+                    newKeyboard[i][binds[i][event.key]] = True
         if event.type == pygame.KEYUP:
-            for i in range(len(vars.binds)):
-                if event.key in vars.binds[i]:
-                    keyboard[i][vars.binds[i][event.key]] = False
-                    newKeyboard[i][vars.binds[i][event.key]] = False
+            for i in range(len(binds)):
+                if event.key in binds[i]:
+                    keyboard[i][binds[i][event.key]] = False
+                    newKeyboard[i][binds[i][event.key]] = False
     
     screen.fill((0,0,0))
 
@@ -769,15 +768,15 @@ def update(tick):
             pygame.mouse.set_visible(True)
         font_render("munro24",str(pygame.mouse.get_pos()),(400,0))
     t = timer.time_readable(timer.time)
-    font_render("munro24",t,(1216,6),(8,8,140))
+    font_render("munro24",t,(1216,6),(8,8,200))
     font_render("munro24",t,(1214,4))
     t = timer.time_readable(timer.levelTime,False)
-    font_render("munro24",t,(1238,36),(9,9,150))
-    font_render("munro24",t,(1236,34))
+    font_render("munro24",t,(1245,35),(200,8,8))
+    font_render("munro24",t,(1243,33))
 
     if debug and sprites[0].extraArgs["player"]:
         debugTextBg.fill((0,0,0))
-        font_render("munro16",f"F {frameN} PS {clock.get_fps():.2f} x {sprites[0].rect.x} y {sprites[0].rect.y} fa {sprites[0].direction} p {sprites[0].projected_direction} T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | s {sprites[0].fSpeed} {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",(1,-1),(255,255,255),surface=debugTextBg)
+        font_render("munro16",f"F {frameN} PS {clock.get_fps():.2f} T {tick} x {sprites[0].rect.x} y {sprites[0].rect.y} fa {sprites[0].direction} p {sprites[0].projected_direction} T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | s {sprites[0].fSpeed} {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",(1,-1),(255,255,255),surface=debugTextBg)
         screen.blit(debugTextBg,(0,730))
 
 pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
@@ -805,10 +804,25 @@ def update_prefs():
     with open(prefsPath,"w+") as f:
         json.dump(userPrefs,f,indent=4)
     apply.set_border(0,(20,150,25))
+    alsoApply.set_border(0,(0,0,0))
+    refresh_binds()
+
+def disgard():
+    global userPrefs
+    with open(prefsPath,"r") as f:
+        userPrefs = json.load(f)
+    apply.set_border(0,(20,150,25))
+    alsoApply.set_border(0,(0,0,0))
+    reset_selectors()
+    reset_control_widgets()
+
+def reset_selectors():
+    [widget.set_value(userPrefs[widget.get_id()]) for widget in preferencesMenu.get_widgets() if isinstance(widget,pygame_menu.widgets.Selector)]
 
 def light_apply():
     try:
         apply.set_border(2,(20,150,25))
+        alsoApply.set_border(2,(20,150,25))
     except:
         pass #cry
 
@@ -832,11 +846,72 @@ for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fon
 for f in [("arial60","arial",60)]:
     fonts[f[0]] = pygame.font.SysFont(f[1],f[2])
 
+blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}]
+
+def refresh_binds():
+    global binds
+    binds = [{v: k for k, v in userPrefs["binds"].items()},vars.binds[1]]
+
+refresh_binds()
+
+def default_controls():
+    userPrefs["binds"] = {v: k for k, v in vars.binds[0].items()}
+    reset_control_widgets()
+    light_apply()
+
+def reset_control_widgets():
+    for widget in controlsMenu.get_widgets():
+        if widget.get_id().startswith("bind"):
+            bind = widget.get_id()[4:]
+            widget.set_title(f"{bind} | {pygame.key.name(userPrefs['binds'][bind])}")
+
+def get_input():
+    global inputMode
+    inputMode[2] += 1
+    if inputMode[2] > 600:
+        button.set_title(f"{inputMode[0]} | {inputMode[1]}")
+        button.set_border(0,(0,0,0))
+        inputMode = []
+        return
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            set_input(event.key)
+
+def set_input(key):
+    global inputMode
+    button = controlsMenu.get_widget(f"bind{inputMode[0]}")
+    button.set_title(f"{inputMode[0]} | {pygame.key.name(key)}")
+    button.set_border(0,(0,0,0))
+    userPrefs["binds"][inputMode[0]] = key
+    inputMode = []
+    light_apply()
+
+def start_input_mode(bind,currentKey):
+    global inputMode
+    inputMode = [bind,currentKey,0]
+    button = controlsMenu.get_widget(f"bind{bind}")
+    button.set_title(f"{bind} | ...")
+    button.set_border(2,(0,90,0))
+
+inputMode = []
+
+controlsMenu = pygame_menu.Menu("Controls.",screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+[controlsMenu.add.button(f"{bind} | {pygame.key.name(userPrefs['binds'][bind])}",start_input_mode,bind,userPrefs['binds'][bind],button_id=f"bind{bind}") for bind in blankKeyboard[0]]
+controlsMenu.add.vertical_margin(40)
+apply = controlsMenu.add.button("Apply", update_prefs)
+controlsMenu.add.button("Disgard", disgard)
+controlsMenu.add.button("Default", default_controls)
+controlsMenu.add.button("Back", pygame_menu.events.BACK)
+
+
 preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
-preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
-preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Input",1)],onchange=set_timer_start,default=userPrefs["timerStart"])
-preferencesMenu.add.selector("Movement ",[("Require Action Button",0),("On Direction Press",1)],onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
-apply = preferencesMenu.add.button("Apply", update_prefs)
+preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],selector_id="levelCompleteAction",onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
+preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Input",1)],selector_id="timerStart",onchange=set_timer_start,default=userPrefs["timerStart"])
+preferencesMenu.add.selector("Movement ",[("Require Action Button",0),("On Direction Press",1)],selector_id="automaticMovement",onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
+preferencesMenu.add.button("Controls",controlsMenu)
+preferencesMenu.add.vertical_margin(40)
+alsoApply = preferencesMenu.add.button("Apply", update_prefs)
+preferencesMenu.add.button("Disgard", disgard)
 preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
 menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
@@ -847,4 +922,11 @@ levelName = levels[0]
 menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
 menu.add.button('Preferences',preferencesMenu)
 menu.add.button('Quit Game', close)
-menu.mainloop(screen)
+
+while 1:
+    if not inputMode:
+        menu.update(pygame.event.get())
+    else:
+        get_input()
+    menu.draw(screen)
+    pygame.display.flip()
