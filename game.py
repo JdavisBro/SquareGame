@@ -18,7 +18,6 @@ elif __file__:
 
 prefsPath = os.path.join(application_path, "userPrefs.json")
 
-
 os.chdir(getattr(sys,"_MEIPASS","."))
 
 debug = True if "debug" in sys.argv else False
@@ -514,7 +513,7 @@ class Timer():
     def print_time(self):
         print(f"Time on level {self.level}: {self.time_readable(self.levelTime)}")
 
-    def time_readable(self,time):
+    def time_readable(self,time,hours=True,milliseconds=True):
         """Returns time (ms) as a readable string of "HH:MM:SS.MS"."""
         if time >= 3600000:
             hour = time//3600000
@@ -537,7 +536,13 @@ class Timer():
         time = str(time//10)
         if time:
             time = ("0" if len(time) == 1 else "") + time
-        return f"{hour}:{minute}:{second}.{time}"
+        out = ""
+        if hours:
+            out += f"{hour}:"
+        out += f"{minute}:{second}"
+        if milliseconds:
+            out += f".{time}"
+        return out
         
 
 def start():
@@ -586,7 +591,7 @@ def returnToMainMenu():
     goMainMenu = True
 
 def reset_level():
-    global staticSurface, levelData, prevGridPos, previousMouse, levelName, bg, spriteTypes
+    global staticSurface, levelData, prevGridPos, previousMouse, levelName, bg, spriteTypes, hudSurface, fonts
 
     with open(f"levels/{levelName}.json","r") as f:
         levelData = json.load(f)
@@ -594,6 +599,8 @@ def reset_level():
     spriteTypes = {"none": Sprite,"player": PlayerSprite,"path": PathSprite}
 
     staticSurface = pygame.Surface(screenSize)
+
+    hudSurface = pygame.Surface(screenSize,flags=pygame.SRCALPHA)
 
     x = 0
     y = 0
@@ -625,13 +632,21 @@ def reset_level():
         staticSurface.blit(im,(24+(i*64),0))
         staticSurface.blit(im,(24+(i*64),levelData['level']['size'][1]*64+24))
 
+    im = pygame.image.load("assets/timerBg.png")
+    im = pygame.transform.scale(im,(128,64))
+    hudSurface.blit(im,(screenSize[0]-128,0))
+
+    im = pygame.image.load("assets/keyCountBg.png")
+    im = pygame.transform.scale(im,(72,26))
+    hudSurface.blit(im,(10,0))
+
     if not levelEdit:
         pygame.mouse.set_visible(False)
     else:
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, blankKeyboard, newKeyboard
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, blankKeyboard, newKeyboard, debugTextBg
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -663,6 +678,9 @@ def reset():
     if timer.level == levelName:
         timer.level_reset()
 
+    if debug:
+        debugTextBg = pygame.Surface(screenSize)
+
 def close():
     print("\n\n")
     sys.exit()
@@ -677,8 +695,14 @@ def loadSpriteOrTerrain(data,stype):
     else:
         Terrain(**data)
 
+def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialising=False):
+    if surface is None:
+        surface = screen
+    text = fonts[font].render(text,True,colour)
+    surface.blit(text,pos)
+
 def update(tick):
-    global clock, play, levelData, sprites, terrains, terrainSurface, collectedKeys
+    global play
 
     newKeyboard = blankKeyboard
 
@@ -730,29 +754,31 @@ def update(tick):
     scrollPos = (list(sprites[0].rect.topleft)[0]+24-0, list(sprites[0].rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
     screen.blit(sprites[0].image,scrollPos)
 
-    font = pygame.font.SysFont("Arial",200)
+    screen.blit(hudSurface,(0,0))
 
     if sprites[0].extraArgs["won"]:
-        text = font.render("Congratulations!",True,(255,255,255))
-        text_rect = text.get_rect()
-        screen.blit(text,(70,70))
-
-    font = pygame.font.SysFont("Arial",30)
+        font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
     if levelData['level']['keys']:
-        text = font.render(f"Keys: {collectedKeys}/{levelData['level']['keys']}",True,(255,255,255))
-        screen.blit(text,(0,0))
+        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,1),(25,25,25))
 
     if levelEdit:
-        text = font.render(str(levelEdit.mousePos),True,(255,255,255))
-        screen.blit(text,(0,0))
-
-    text = font.render(f"L: {timer.time_readable(timer.levelTime)} - O: {timer.time_readable(timer.time)}",True,(255,255,255))
-    screen.blit(text,(0,700))
+        font_render("munro24",str(levelEdit.mousePos),(90,0))
+    if debug:
+        if not pygame.mouse.get_visible():
+            pygame.mouse.set_visible(True)
+        font_render("munro24",str(pygame.mouse.get_pos()),(400,0))
+    t = timer.time_readable(timer.time)
+    font_render("munro24",t,(1216,6),(8,8,140))
+    font_render("munro24",t,(1214,4))
+    t = timer.time_readable(timer.levelTime,False)
+    font_render("munro24",t,(1238,36),(9,9,150))
+    font_render("munro24",t,(1236,34))
 
     if debug and sprites[0].extraArgs["player"]:
-        text = font.render(f"Frame: {frameN} ps {clock.get_fps():.2f} | Pos: x {sprites[0].rect.x} y {sprites[0].rect.y} | Dir: {sprites[0].direction} pr {sprites[0].projected_direction} | Edges: T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | Speed: f {sprites[0].fSpeed} - {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",True,(255,0,0))
-        screen.blit(text,(0,40))
+        debugTextBg.fill((0,0,0))
+        font_render("munro16",f"F {frameN} PS {clock.get_fps():.2f} x {sprites[0].rect.x} y {sprites[0].rect.y} fa {sprites[0].direction} p {sprites[0].projected_direction} T {sprites[0].rect.top} L {sprites[0].rect.left} R {sprites[0].rect.right} B {sprites[0].rect.bottom} | s {sprites[0].fSpeed} {sprites[0].speed} su {sprites[0].startup} | Ani: {sprites[0].animationFrame} {sprites[0].animation} | {sprites[0].extraArgs}",(1,-1),(255,255,255),surface=debugTextBg)
+        screen.blit(debugTextBg,(0,730))
 
 pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 pauseMenu.add.button('Continue', unpause)
@@ -797,6 +823,14 @@ def set_timer_start(timerStart, *args, **kwargs):
 def set_automatic_movement(automaticMovement, *args, **kwargs):
     userPrefs["automaticMovement"] = automaticMovement[1]
     light_apply()
+
+fonts = {}
+
+for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fonts/munro/small.ttf",18),("munro16","assets/fonts/munro/small.ttf",16)]:
+    fonts[f[0]] = pygame.font.Font(f[1],f[2])
+
+for f in [("arial60","arial",60)]:
+    fonts[f[0]] = pygame.font.SysFont(f[1],f[2])
 
 preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
