@@ -89,7 +89,7 @@
                 0
             ],
             "extraArgs": {
-                "blitImage": "w",
+                "addControl": "up",
                 "tangable": false
             }
         },
@@ -102,7 +102,7 @@
                 64
             ],
             "extraArgs": {
-                "blitImage": "a",
+                "addControl": "left",
                 "tangable": false
             }
         },
@@ -115,7 +115,7 @@
                 128
             ],
             "extraArgs": {
-                "blitImage": "s",
+                "addControl": "down",
                 "tangable": false
             }
         },
@@ -128,7 +128,7 @@
                 64
             ],
             "extraArgs": {
-                "blitImage": "d",
+                "addControl": "right",
                 "tangable": false
             }
         },

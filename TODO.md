@@ -8,5 +8,4 @@
 ## Possibly Do:
 
 - Music?
-- Remappable Controls?
 - Improve Level Editor capability?

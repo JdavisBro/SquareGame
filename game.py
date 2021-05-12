@@ -98,7 +98,7 @@ class Sprite:
         ):
         global levelEdit
         self.aliveFrames = 0
-        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False,"blitImage":None} # Default Args
+        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False,"addControl":None} # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
         if animations:
             self.animations = vars.animations[animations]
@@ -117,9 +117,9 @@ class Sprite:
                 vars.images[extraImages][im] = pygame.transform.scale(img,(self.rect.width*scale,self.rect.height*scale))
         self.images = vars.images[extraImages]
         self.image = self.images[image]
-        if self.extraArgs["blitImage"]:
+        if self.extraArgs["addControl"]:
             self.image = self.image.copy()
-            self.image.blit(self.images[self.extraArgs["blitImage"]],(0,0))
+            font_render("munro32",pygame.key.name(userPrefs["binds"][self.extraArgs["addControl"]]).upper(),(24,14),surface=self.image)
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
@@ -803,16 +803,14 @@ def select_level(selectedlevel, *args, **kwargs):
 def update_prefs():
     with open(prefsPath,"w+") as f:
         json.dump(userPrefs,f,indent=4)
-    apply.set_border(0,(20,150,25))
-    alsoApply.set_border(0,(0,0,0))
+    darken_apply()
     refresh_binds()
 
 def disgard():
     global userPrefs
     with open(prefsPath,"r") as f:
         userPrefs = json.load(f)
-    apply.set_border(0,(20,150,25))
-    alsoApply.set_border(0,(0,0,0))
+    darken_apply()
     reset_selectors()
     reset_control_widgets()
 
@@ -821,10 +819,17 @@ def reset_selectors():
 
 def light_apply():
     try:
-        apply.set_border(2,(20,150,25))
-        alsoApply.set_border(2,(20,150,25))
+        for w in applies + disgards:
+            w.set_border(2,((20,150,25) if w in applies else (150,20,25)))
     except:
         pass #cry
+
+def darken_apply():
+    try:
+        for w in applies + disgards:
+            w.set_border(0,(0,0,0))
+    except:
+        pass #joy
 
 def set_level_complete_action(levelCompleteAction, *args, **kwargs):
     userPrefs["levelCompleteAction"] = levelCompleteAction[1]
@@ -840,7 +845,7 @@ def set_automatic_movement(automaticMovement, *args, **kwargs):
 
 fonts = {}
 
-for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fonts/munro/small.ttf",18),("munro16","assets/fonts/munro/small.ttf",16)]:
+for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fonts/munro/small.ttf",18),("munro16","assets/fonts/munro/small.ttf",16),("munro32","assets/fonts/munro/regular.ttf",32)]:
     fonts[f[0]] = pygame.font.Font(f[1],f[2])
 
 for f in [("arial60","arial",60)]:
@@ -894,12 +899,14 @@ def start_input_mode(bind,currentKey):
     button.set_border(2,(0,90,0))
 
 inputMode = []
+applies = []
+disgards = []
 
 controlsMenu = pygame_menu.Menu("Controls.",screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 [controlsMenu.add.button(f"{bind} | {pygame.key.name(userPrefs['binds'][bind])}",start_input_mode,bind,userPrefs['binds'][bind],button_id=f"bind{bind}") for bind in blankKeyboard[0]]
 controlsMenu.add.vertical_margin(40)
-apply = controlsMenu.add.button("Apply", update_prefs)
-controlsMenu.add.button("Disgard", disgard)
+applies.append(controlsMenu.add.button("Apply", update_prefs))
+disgards.append(controlsMenu.add.button("Disgard", disgard))
 controlsMenu.add.button("Default", default_controls)
 controlsMenu.add.button("Back", pygame_menu.events.BACK)
 
@@ -910,14 +917,14 @@ preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Inpu
 preferencesMenu.add.selector("Movement ",[("Require Action Button",0),("On Direction Press",1)],selector_id="automaticMovement",onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
 preferencesMenu.add.button("Controls",controlsMenu)
 preferencesMenu.add.vertical_margin(40)
-alsoApply = preferencesMenu.add.button("Apply", update_prefs)
-preferencesMenu.add.button("Disgard", disgard)
+applies.append(preferencesMenu.add.button("Apply", update_prefs))
+disgards.append(preferencesMenu.add.button("Disgard", disgard))
 preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
 menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
 menu.add.button('Play Game', start)
 levels = list(list(os.walk("levels"))[0][2])
-levels = [f[:-5] for f in levels]
+levels = [f[:-5] for f in levels if f.endswith(".json")]
 levelName = levels[0]
 menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
 menu.add.button('Preferences',preferencesMenu)
