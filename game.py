@@ -30,21 +30,18 @@ size = (1280, 704) #playfield
 screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
 
-if 'levelEdit' in sys.argv:
-    from levelEdit import LevelEditor
-    levelEdit = LevelEditor(screenSize,size)
-else:
-    levelEdit = None
-
 pygame.display.set_caption("Game.")
 
 icon = pygame.image.load("assets/icon.png")
 
 pygame.display.set_icon(icon)
 
-if levelEdit:
+if 'levelEdit' in sys.argv:
     screen = pygame.display.set_mode([screenSize[0]+500,screenSize[1]])
+    from levelEdit import LevelEditor
+    levelEdit = LevelEditor(screenSize,size,screen)
 else:
+    levelEdit = None
     screen = pygame.display.set_mode(screenSize)
 
 frameN = 1
@@ -98,7 +95,13 @@ class Sprite:
         ):
         global levelEdit
         self.aliveFrames = 0
-        self.extraArgs = {"dead":False,"player":False,"tangable":True,"kill":False,"killable":False,"movable":False,"key":False,"goal":False,"locked":False,"won":False,"path":None,"pathSpeed":1,"pathStartup":1,"pushed":False,"addControl":None} # Default Args
+        self.extraArgs = {
+            "dead":False,"player":False,"tangable":True,
+            "kill":False,"killable":False,"movable":False,
+            "key":False,"goal":False,"locked":False,
+            "won":False,"path":None,"pathSpeed":1,
+            "pathStartup":1,"addControl":None
+        } # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
         if animations:
             self.animations = vars.animations[animations]
@@ -321,7 +324,6 @@ class PlayerSprite(Sprite):
                 if not self.animation:
                     self.set_animation("collide")
             self.startup -= 0.5 if self.startup > 1 else 0
-            self.extraArgs["pushed"] = None
         super().update(tick)
 
     def collisions(self,binds):
@@ -596,6 +598,8 @@ def reset_level():
     with open(f"levels/{levelName}.json","r") as f:
         levelData = json.load(f)
 
+    levelEdit.levelData = levelData
+
     spriteTypes = {"none": Sprite,"player": PlayerSprite,"path": PathSprite}
 
     staticSurface = pygame.Surface(screenSize)
@@ -664,13 +668,18 @@ def reset():
 
     for sprite in levelData["sprites"]:
         if levelEdit:
-            levelEdit.editCoords[str(sprite["pos"])] = [None,sprite]
+            levelEdit.editCoords[str(sprite["pos"])] = [None,sprite,"sprite"]
         loadSpriteOrTerrain(sprite,"sprite")
 
     for terrain in levelData["terrain"]:
         if levelEdit:
-            levelEdit.editCoords[str(terrain["pos"])] = [None,terrain]
+            levelEdit.editCoords[str(terrain["pos"])] = [None,terrain,"terrain"]
         loadSpriteOrTerrain(terrain,"terrain")
+
+    if levelEdit:
+        levelEdit.sprites = sprites
+        levelEdit.terrains = terrains
+        levelEdit.terrainSurface = terrainSurface
 
     keyboard = blankKeyboard
     newKeyboard = blankKeyboard
@@ -694,6 +703,9 @@ def loadSpriteOrTerrain(data,stype):
         spritetype(**data)
     else:
         Terrain(**data)
+
+if levelEdit:
+    levelEdit.loadSpriteOrTerrain = loadSpriteOrTerrain
 
 def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialiasing=True):
     if surface is None:
@@ -735,9 +747,9 @@ def update(tick):
     screen.blit(terrainSurface,(24,24)) # THIS IS WHERE SCREEN SCROLL WOULD GO!
 
     if levelEdit and not play:
+        selectedIm,play = levelEdit.update()
         screen.blit(levelEdit.editSurface,(0,0),special_flags=pygame.BLEND_ADD)
-        selectedIm,play = levelEdit.update(levelData,sprites,terrains,terrainSurface,loadSpriteOrTerrain)
-        if selectedIm:
+        if selectedIm[1].topleft != (0,0):
             screen.blit(selectedIm[0],selectedIm[1])
 
     for sprite in sorted(sprites[1:]): # SPRITES

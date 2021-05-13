@@ -1,18 +1,40 @@
 import math
 import json
+import sys
 
 import pygame
+import pygame_menu
 
 import vars
 
+def bind(value,upper,lower):
+    if value > upper:
+        return upper, True
+    if value < lower:
+        return lower, True
+    return value, False
+
 class LevelEditor():
-    def __init__(self,scr,siz):
-        global screenSize, size
+    def __init__(self,scr,siz,scree):
+        global screenSize, size, screen
+        self.loadSpriteOrTerrain = None
+        self.sprites = None
+        self.terrains = None
+        self.terrainSurface = None
         screenSize = scr
         size = siz
+        screen = scree
+        self.posMode = False
         self.mousePos = [0,0]
+        self.currentlyEditing = None
+        self.editMenu = None
+        self.backupGuy = None
+        self.levelData = None
 
-    def update(self,levelData,sprites,terrains,terrainSurface,loadSpriteOrTerrain):
+    def update(self):
+        if self.editMenu:
+            if self.editMenu.is_enabled():
+                self.edit_menu()
         if self.selected in self.levelEditAssets.keys():
             self.selectedIm[1].x = self.levelEditAssets[self.selected].x
             self.selectedIm[1].y = self.levelEditAssets[self.selected].y
@@ -21,51 +43,188 @@ class LevelEditor():
         if any(mouse):
             mouseRect = pygame.Rect(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)
             clicked = mouseRect.collidelist(list(self.levelEditAssets.values()))
-            if clicked != -1 and mouse[0]:
+            if clicked != -1 and mouse[0] and not self.posMode: # Clicked an asset
                 if list(self.levelEditAssets.keys())[clicked] == "save":
                     if not self.previousMouse[0]:
                         with open("out.json","w+") as f:
-                            json.dump(levelData,f,indent=4)
+                            json.dump(self.levelData,f,indent=4)
                     self.previousMouse = mouse
                     return self.selectedIm,False
                 self.selected = list(self.levelEditAssets.keys())[clicked]
                 self.prevGridPos = [-1,-1]
-            else:
+            else: # Didn't click an asset, could've clicked a grid spot
                 mouseRect.topleft = (mouseRect.x-24,mouseRect.y-24)
-                if (mouseRect.x <= size[0] and self.selected) and mouse[0]:
+                if not (bind(mouseRect.x,size[0],0)[1] or bind(mouseRect.y,size[1],0)[1]): # WE ON DA GRID
                     gridPos = []
                     gridPos.append(math.floor(mouseRect.x / 64))
                     gridPos.append(math.floor(mouseRect.y / 64))
-                    if gridPos != self.prevGridPos:
-                        self.prevGridPos = gridPos.copy()
-                        gridPos[0] = gridPos[0]*64
-                        gridPos[1] = gridPos[1]*64
+                    notPrev = gridPos != self.prevGridPos
+                    self.prevGridPos = gridPos.copy()
+                    gridPos[0] = gridPos[0]*64
+                    gridPos[1] = gridPos[1]*64
+                    if mouse[0]: # Ayo we left clicked on the motherfuckin grid
+                        if self.posMode:
+                            return self.set_pos(gridPos)
+                        if notPrev and self.selected:
+                            if (str(gridPos) in self.editCoords):
+                                if [terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == gridPos]:
+                                    self.terrainSurface.fill((0,0,0,0),self.editCoords[str(gridPos)][0].rect)
+                                    self.terrains.remove([terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == gridPos][0])
+                                elif [sprite for sprite in self.sprites if [sprite.rect.x,sprite.rect.y] == gridPos]:
+                                    self.sprites.remove([sprite for sprite in self.sprites if [sprite.rect.x,sprite.rect.y] == gridPos][0])
+                                if self.editCoords[str(gridPos)][1] in self.levelData["terrain"]:
+                                    self.levelData["terrain"].remove(self.editCoords[str(gridPos)][1])
+                                elif self.editCoords[str(gridPos)][1] in self.levelData["sprites"]:
+                                    self.levelData["sprites"].remove(self.editCoords[str(gridPos)][1])
+                                self.editCoords.pop(str(gridPos))
+                            if self.selected == "eraser":
+                                return self.selectedIm,False
+                            if self.selected in vars.sprites:
+                                self.levelData["sprites"].append({"image":"idle","extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos})
+                                self.editCoords[str(gridPos)] = [None,self.levelData["sprites"][-1].copy(),"sprite"]
+                                self.loadSpriteOrTerrain({"image":"idle","extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos},"sprite")
+                            if self.selected in vars.terrains:
+                                self.levelData["terrain"].append({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos})
+                                self.editCoords[str(gridPos)] = [None,self.levelData["terrain"][-1].copy(),"terrain"]
+                                self.loadSpriteOrTerrain({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos},"terrain")
+                    elif mouse[2]: # hol on.. we right clickin
                         if (str(gridPos) in self.editCoords):
-                            if [terrain for terrain in terrains if [terrain.rect.x,terrain.rect.y] == gridPos]:
-                                terrainSurface.fill((0,0,0,0),self.editCoords[str(gridPos)][0].rect)
-                                terrains.remove([terrain for terrain in terrains if [terrain.rect.x,terrain.rect.y] == gridPos][0])
-                            elif [sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == gridPos]:
-                                sprites.remove([sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == gridPos][0])
-                            if self.editCoords[str(gridPos)][1] in levelData["terrain"]:
-                                levelData["terrain"].remove(self.editCoords[str(gridPos)][1])
-                            elif self.editCoords[str(gridPos)][1] in levelData["sprites"]:
-                                levelData["sprites"].remove(self.editCoords[str(gridPos)][1])
-                            self.editCoords.pop(str(gridPos))
-                        if self.selected == "eraser":
-                            return self.selectedIm,False
-                        if self.selected in vars.sprites:
-                            levelData["sprites"].append({"image":"idle","extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos})
-                            self.editCoords[str(gridPos)] = [None,levelData["sprites"][-1]]
-                            loadSpriteOrTerrain({"image":"idle","extraImages": vars.sprites[self.selected],"assetPath":self.selected,"pos":gridPos},"sprite")
-                        if self.selected in vars.terrains:
-                            levelData["terrain"].append({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos})
-                            self.editCoords[str(gridPos)] = [None,levelData["terrain"][-1]]
-                            loadSpriteOrTerrain({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos},"terrain")
-        play = False
-        if pygame.key.get_pressed()[pygame.K_p]:
-            play = True
+                            if self.editCoords[str(gridPos)][2] == "sprite":
+                                self.currentlyEditingL = gridPos
+                                self.currentlyEditing = str(gridPos)
+                                self.editMenu = pygame_menu.Menu("Edit Sprite.",size[0],size[1],theme=pygame_menu.themes.THEME_DARK)
+                                guy = self.editCoords[self.currentlyEditing][1]
+                                self.backupGuy = guy.copy()
+                                for arg,argType in vars.spriteArgs.items():
+                                    self.add_widget(arg,argType,guy)
+                                self.editMenu.add.vertical_margin(30)
+                                for arg,argType in vars.spriteExtraArgs.items():
+                                    self.add_widget(arg,argType,guy,True)
+                                self.editMenu.add.button("Apply",self.update_sprite)
+                                self.editMenu.add.button("Return",self.editMenu.disable)
+                                self.editMenu.enable()
+                                return self.edit_menu()
         self.previousMouse = mouse
-        return self.selectedIm,play
+        return self.selectedIm,(True if pygame.key.get_pressed()[pygame.K_p] else False)
+
+    def add_widget(self,arg,argType,guy,extraArg=False):
+        wid = ("e!" if extraArg else "") + arg
+        if argType[0] == "text":
+            default = argType[1] if argType[1] is not None else "N/A"
+            default = guy.get(arg,default) if not extraArg else guy["extraArgs"].get(arg,default)
+            text_input = self.editMenu.add.text_input(f"{arg}: ",textinput_id=wid,onreturn=self.text_edit,input_underline='_',default=str(default))
+            text_input.add_self_to_kwargs()
+        elif argType[0] == "pos":
+            button = self.editMenu.add.button(f"{arg}: {str(guy[arg])}",self.pos_mode,button_id=wid)
+            button.add_self_to_kwargs()
+        elif argType[0] == "dropdown":
+            default = argType[2] if argType[2] is not None else "NO VALUE"
+            index = (guy.get(arg,default) if not extraArg else guy["extraArgs"].get(arg,default))
+            if index != "NO VALUE":
+                index = argType[1].index(index)
+            else:
+                index = -1
+            values = [(str(i),i) for i in argType[1]]
+            dropselect = self.editMenu.add.dropselect(arg,values,dropselect_id=wid,onchange=self.drop_select,default=index)
+            dropselect.add_self_to_kwargs()
+        elif argType[0] == "toggle":
+            default = guy.get(arg,argType[1]) if not extraArg else guy["extraArgs"].get(arg,argType[1])
+            toggle_switch = self.editMenu.add.toggle_switch(arg,toggleswitch_id=wid,onchange=self.toggle,default=default)
+            toggle_switch.add_self_to_kwargs()
+        elif argType[0] == "float":
+            default = argType[1] if argType[1] is not None else 0
+            default = guy.get(arg,default) if not extraArg else guy["extraArgs"].get(arg,default)
+            text_input = self.editMenu.add.text_input(f"{arg}: ",textinput_id=wid,input_type=pygame_menu.locals.INPUT_FLOAT,onreturn=self.text_edit,input_underline='_',default=int(default))
+            text_input.add_self_to_kwargs()
+
+    def toggle(self,state,widget):
+        arg = widget.get_id()
+        ex = False
+        if arg.startswith("e!"):
+            arg = arg[2:]
+            ex = True
+        if ex:
+            self.editCoords[self.currentlyEditing][1]["extraArgs"][arg] = state
+        else:
+            self.editCoords[self.currentlyEditing][1][arg] = state
+
+    def drop_select(self,a,selected,widget):
+        arg = widget.get_id()
+        ex = False
+        if arg.startswith("e!"):
+            arg = arg[2:]
+            ex = True
+        if ex:
+            self.editCoords[self.currentlyEditing][1]["extraArgs"][arg] = selected
+        else:  
+            self.editCoords[self.currentlyEditing][1][arg] = selected
+
+    def edit_menu(self):
+        while 1:
+            self.editMenu.update(pygame.event.get())
+            if not self.editMenu.is_enabled():
+                return self.selectedIm,False
+            self.editMenu.draw(screen)
+            pygame.display.flip()
+
+    def pos_mode(self,widget):
+        self.posMode = True
+        self.editMenu.disable()
+        self.button = widget
+
+    def set_pos(self,newPos):
+        newPosButAsAStr = str(newPos)
+        if newPos == self.currentlyEditing:
+            self.posMode = False
+            return
+        if (newPosButAsAStr in self.editCoords):
+            if [terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == newPos]:
+                self.terrainSurface.fill((0,0,0,0),self.editCoords[newPosButAsAStr][0].rect)
+                self.terrains.remove([terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == newPos][0])
+            elif [sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == newPos]:
+                sprites.remove([sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == newPos][0])
+            if self.editCoords[newPosButAsAStr][1] in self.levelData["terrain"]:
+                self.levelData["terrain"].remove(self.editCoords[newPosButAsAStr][1])
+            elif self.editCoords[newPosButAsAStr][1] in self.levelData["sprites"]:
+                self.levelData["sprites"].remove(self.editCoords[newPosButAsAStr][1])
+            self.editCoords.pop(newPosButAsAStr)
+        self.editCoords[newPosButAsAStr] = self.editCoords[self.currentlyEditing]
+        self.editCoords[newPosButAsAStr][1]["pos"] = newPos
+        self.editCoords.pop(self.currentlyEditing)
+        self.currentlyEditingL = newPos
+        self.currentlyEditing = newPosButAsAStr
+        self.update_sprite()
+        self.posMode = False
+        self.editMenu.enable()
+        self.button.set_title(f"{self.button.get_id()}: {str(self.editCoords[newPosButAsAStr][1][self.button.get_id()])}")
+        return self.selectedIm,False
+
+    def update_sprite(self):
+        self.sprites.remove(self.editCoords[self.currentlyEditing][0])
+        try:
+            self.loadSpriteOrTerrain(self.editCoords[self.currentlyEditing][1],"sprite")
+        except:
+            self.editCoords[self.currentlyEditing][1] = self.backupGuy
+            self.loadSpriteOrTerrain(self.backupGuy,"sprite")
+            print(f"ERROR: REVERTING TO BACKUP OF GUY\n{sys.exc_info()}")
+            self.editMenu.disable()
+        else:
+            for i in range(len(self.levelData["sprites"])):
+                if self.levelData["sprites"][i]["pos"] == self.currentlyEditingL:
+                    self.levelData["sprites"].remove(self.levelData["sprites"][i])
+                    self.levelData["sprites"].append(self.editCoords[self.currentlyEditing][1].copy())
+            self.backupGuy = self.editCoords[self.currentlyEditing][1].copy()
+
+    def text_edit(self,current_text,widget):
+        arg = widget.get_id()
+        ex = False
+        if arg.startswith("e!"):
+            arg = arg[2:]
+            ex = True
+        if ex:
+            self.editCoords[self.currentlyEditing][1]["extraArgs"][arg] = current_text
+        else:
+            self.editCoords[self.currentlyEditing][1][arg] = current_text
 
     def level_reset(self):
         self.prevGridPos = [-1,-1]
