@@ -100,7 +100,7 @@ class Sprite:
             "kill":False,"killable":False,"movable":False,
             "key":False,"goal":False,"locked":False,
             "won":False,"path":None,"pathSpeed":1,
-            "pathStartup":1,"addControl":None
+            "pathStartup":1,"pathCooldown": 60,"addControl":None
         } # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
         if animations:
@@ -132,7 +132,7 @@ class Sprite:
             levelEdit.editCoords[str(list(self.rect.topleft))][0] = self
 
     def __lt__(self,other):
-        return (self.weight < other.weight) and (vars.typeHierarchy[self.type] < vars.typeHierarchy[other.type])
+        return (self.weight < other.weight)
 
     def update(self,tick):
         global collectedKeys
@@ -598,7 +598,8 @@ def reset_level():
     with open(f"levels/{levelName}.json","r") as f:
         levelData = json.load(f)
 
-    levelEdit.levelData = levelData
+    if levelEdit:
+        levelEdit.levelData = levelData
 
     spriteTypes = {"none": Sprite,"player": PlayerSprite,"path": PathSprite}
 

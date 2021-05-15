@@ -2,13 +2,13 @@
 
 ## Do:
 
+- Add path to levelEdit sprite edit
 - Sound Effects.
 - More Levels.
 
 ## Possibly Do:
 
 - Music?
-- Improve Level Editor capability?
 
 ## don't do at all:
 

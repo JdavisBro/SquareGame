@@ -81,25 +81,28 @@ sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":
 
 terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick"}
 
-typeHierarchy = {"static": 0,"path": 5,"motion": 10}
+types = ["none","path","player"]
 
 spriteArgs = {
     "image": ["text",None],
-    "pos": ["pos"],
+    "type": ["dropdown", types,"none"],
+    "pos": ["pos",False],
     "assetPath": ["text","assets/"],
     "extraImages": ["dropdown",list(images.keys()),"default"],
     "animations": ["dropdown",list(animations.keys()),None],
 }
 
 spriteExtraArgs = {
-    "player": ["dropdown",[1,2],None],
+    "player": ["flint",0,"int"],
     "tangable": ["toggle",1],
+    "kill": ["toggle",0],
     "movable": ["toggle",0],
     "key": ["toggle",0],
     "goal": ["toggle",0],
     "locked": ["toggle",0],
-    "path": ["path"],
-    "pathSpeed": ["float",1],
-    "pathStartup": ["float",1],
+    "path": ["pos",[]],
+    "pathSpeed": ["flint",1,"float"],
+    "pathStartup": ["flint",1,"float"],
+    "pathCooldown": ["flint",60,"float"],
     "addControl": ["text",None]
 }
