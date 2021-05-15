@@ -2,7 +2,6 @@
 
 ## Do:
 
-- Add path to levelEdit sprite edit
 - Sound Effects.
 - More Levels.
 

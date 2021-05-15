@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import random
+import copy
 
 # External
 import pygame
@@ -682,8 +683,8 @@ def reset():
         levelEdit.terrains = terrains
         levelEdit.terrainSurface = terrainSurface
 
-    keyboard = blankKeyboard
-    newKeyboard = blankKeyboard
+    keyboard = copy.deepcopy(blankKeyboard)
+    newKeyboard = copy.deepcopy(blankKeyboard)
 
     if timer.level == levelName:
         timer.level_reset()
@@ -717,7 +718,7 @@ def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialiasing=T
 def update(tick):
     global play
 
-    newKeyboard = blankKeyboard
+    newKeyboard = copy.deepcopy(blankKeyboard)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT: close()
@@ -725,14 +726,19 @@ def update(tick):
             timer.start()
             for i in range(len(binds)):
                 if event.key in binds[i]:
-                    keyboard[i][binds[i][event.key]] = True
                     newKeyboard[i][binds[i][event.key]] = True
+                    keyboard[i][binds[i][event.key]] = True
         if event.type == pygame.KEYUP:
             for i in range(len(binds)):
                 if event.key in binds[i]:
                     keyboard[i][binds[i][event.key]] = False
-                    newKeyboard[i][binds[i][event.key]] = False
     
+    if levelEdit and not play:
+        if newKeyboard[0]["left"]:
+            levelData["level"]["keys"] -= 1
+        elif newKeyboard[0]["right"]:
+            levelData["level"]["keys"] += 1
+
     screen.fill((0,0,0))
 
     if levelEdit and play:
