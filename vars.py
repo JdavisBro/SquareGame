@@ -49,7 +49,10 @@ images = {
     },
     "brick": {
         0: "0.png"
-    }
+    },
+    "phantombrick": {
+        0: "0.png"
+    },
 }
 
 animations = {
@@ -79,7 +82,7 @@ binds = [
 
 sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle"}
 
-terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick"}
+terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick","assets/terrain/phantombrick/": "phantombrick"}
 
 types = ["none","path","player"]
 
@@ -104,5 +107,6 @@ spriteExtraArgs = {
     "pathSpeed": ["flint",1,"float"],
     "pathStartup": ["flint",1,"float"],
     "pathCooldown": ["flint",60,"float"],
+    "pathRepeat": ["toggle",1],
     "addControl": ["text",None]
 }

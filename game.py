@@ -101,7 +101,8 @@ class Sprite:
             "kill":False,"killable":False,"movable":False,
             "key":False,"goal":False,"locked":False,
             "won":False,"path":None,"pathSpeed":1,
-            "pathStartup":1,"pathCooldown": 60,"addControl":None
+            "pathStartup":1,"pathCooldown": 60,"pathRepeat":True,
+            "addControl": None,
         } # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
         if animations:
@@ -111,7 +112,7 @@ class Sprite:
             else:
                 self.set_animation("a")
         else:
-            self.animations = None
+            self.animations = []
         self.rect = None
         if isinstance(list(vars.images[extraImages].values())[0],str):
             for im in vars.images[extraImages]:
@@ -267,6 +268,7 @@ class PlayerSprite(Sprite):
 
 
     def update(self,tick):
+        global newKeyboard
         player = self.extraArgs["player"]-1
         if keyboard[player]["pause"]:
             pause()
@@ -356,6 +358,8 @@ class PlayerSprite(Sprite):
                     elif self.direction == 3: #left
                         self.rect.left = rects[collision].right
                     spritesNoMe[collision].startup = 30
+                    if "collide" in spritesNoMe[collision].animations:
+                        spritesNoMe[collision].set_animation("collide")
         rects = [terrain.rect for terrain in terrains]
         collides = self.rect.collidelistall(rects)
         if collides:
@@ -383,9 +387,12 @@ class PathSprite(Sprite):
         self.pathIndexDir = 0
         self.pathCooldown = self.extraArgs["pathCooldown"]
         self.moving = None
+        self.done = False
+        if self.extraArgs["path"] is None:
+            self.extraArgs["path"] = [self.rect.topleft]
 
     def update(self,tick):
-        if not self.extraArgs["dead"]:
+        if not self.extraArgs["dead"] and ((not self.extraArgs["pathRepeat"] and not self.done) or self.extraArgs["pathRepeat"]):
             if self.pathCooldown:
                 self.pathCooldown -= 1
             else:
@@ -438,10 +445,12 @@ class PathSprite(Sprite):
                     if self.pathIndex == 0 and self.pathIndexDir == 1:
                         self.pathIndexDir = 0
                     elif self.pathIndex == len(self.extraArgs["path"])-1 and self.pathIndexDir == 0:
+                        self.done = True
                         self.pathIndexDir = 1
                     self.startup = self.extraArgs["pathStartup"]
                     self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
                     self.pathCooldown = self.extraArgs["pathCooldown"]
+                    self.set_animation("idle")
                 self.startupImmunity -= 1 if self.startupImmunity > 0 else 0
                 if self.startup > 1:
                     self.startup -= 0.5
@@ -562,6 +571,10 @@ def start():
         if pauseMenu.is_enabled():
             pauseMenu.update(pygame.event.get())
         if goMainMenu:
+            levels = list(list(os.walk("levels"))[0][2])
+            levels = [f[:-5] for f in levels if f.endswith(".json")]
+            dropSelect.update_items([(level,level) for level in levels])
+            dropSelect.make_selection_drop()
             return
         if pauseMenu.is_enabled():
             pauseMenu.draw(screen)
@@ -716,7 +729,7 @@ def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialiasing=T
     surface.blit(text,pos)
 
 def update(tick):
-    global play
+    global play, newKeyboard
 
     newKeyboard = copy.deepcopy(blankKeyboard)
 
@@ -881,7 +894,7 @@ def set_automatic_movement(automaticMovement, *args, **kwargs):
     userPrefs["automaticMovement"] = automaticMovement[1]
     light_apply()
 
-blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False}] # controls and controls menu
+blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False}] # controls and controls menu
 
 def refresh_binds():
     global binds
@@ -956,7 +969,7 @@ menu.add.button('Play Game', start)
 levels = list(list(os.walk("levels"))[0][2])
 levels = [f[:-5] for f in levels if f.endswith(".json")]
 levelName = levels[0]
-menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
+dropSelect = menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
 menu.add.button('Preferences',preferencesMenu)
 menu.add.button('Quit Game', close)
 

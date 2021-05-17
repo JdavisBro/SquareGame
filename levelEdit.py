@@ -1,3 +1,4 @@
+import os
 import math
 import json
 import sys
@@ -58,7 +59,10 @@ class LevelEditor():
             if clicked != -1 and mouse[0] and not self.posMode: # Clicked an asset
                 if list(self.levelEditAssets.keys())[clicked] == "save":
                     if not self.previousMouse[0]:
-                        with open("out.json","w+") as f:
+                        outN = 0
+                        while os.path.exists(f"levels/out{str(outN)}.json"):
+                            outN += 1
+                        with open(f"levels/out{str(outN)}.json","w+") as f:
                             json.dump(self.levelData,f,indent=4)
                     self.previousMouse = mouse
                     return self.selectedIm,False
@@ -99,7 +103,7 @@ class LevelEditor():
                                 self.levelData["terrain"].append({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos})
                                 self.editCoords[str(gridPos)] = [None,self.levelData["terrain"][-1].copy(),"terrain"]
                                 self.loadSpriteOrTerrain({"image":vars.images[vars.terrains[self.selected]][0],"assetPath":self.selected,"pos":gridPos},"terrain")
-                    elif mouse[2]: # hol on.. we right clickin
+                    elif mouse[2] and not self.posMode: # hol on.. we right clickin
                         if (str(gridPos) in self.editCoords):
                             if self.editCoords[str(gridPos)][2] == "sprite":
                                 self.currentlyEditingL = gridPos
@@ -195,7 +199,10 @@ class LevelEditor():
 
     def edit_menu(self):
         while 1:
-            self.editMenu.update(pygame.event.get())
+            try:
+                self.editMenu.update(pygame.event.get())
+            except:
+                self.update_sprite()
             if not self.editMenu.is_enabled():
                 return self.selectedIm,False
             self.editMenu.draw(screen)
@@ -203,8 +210,9 @@ class LevelEditor():
 
     def pos_mode(self,listMode,widget):
         self.posMode = True
-        print((listMode))
-        self.posList = listMode
+        self.posList = False
+        if isinstance(listMode,list):
+            self.posList = listMode.copy()
         self.editMenu.disable()
         self.button = widget
         self.prevGridPos = [-1,-1]
@@ -212,15 +220,16 @@ class LevelEditor():
     def set_pos(self,newPos):
         newPosButAsAStr = str(newPos)
         if not isinstance(self.posList,list):
-            if newPos == self.currentlyEditing:
+            if newPosButAsAStr == self.currentlyEditing:
                 self.posMode = False
+                self.editMenu.enable()
                 return self.selectedIm,False
             if (newPosButAsAStr in self.editCoords):
                 if [terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == newPos]:
                     self.terrainSurface.fill((0,0,0,0),self.editCoords[newPosButAsAStr][0].rect)
                     self.terrains.remove([terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == newPos][0])
-                elif [sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == newPos]:
-                    sprites.remove([sprite for sprite in sprites if [sprite.rect.x,sprite.rect.y] == newPos][0])
+                elif [sprite for sprite in self.sprites if [sprite.rect.x,sprite.rect.y] == newPos]:
+                    self.sprites.remove([sprite for sprite in self.sprites if [sprite.rect.x,sprite.rect.y] == newPos][0])
                 if self.editCoords[newPosButAsAStr][1] in self.levelData["terrain"]:
                     self.levelData["terrain"].remove(self.editCoords[newPosButAsAStr][1])
                 elif self.editCoords[newPosButAsAStr][1] in self.levelData["sprites"]:

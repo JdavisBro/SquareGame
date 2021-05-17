@@ -2,8 +2,8 @@
 
 ## Do:
 
-- Sound Effects.
 - More Levels.
+- Sound Effects.
 
 ## Possibly Do:
 
