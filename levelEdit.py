@@ -16,15 +16,14 @@ def bind(value,upper,lower):
     return value, False
 
 class LevelEditor():
-    def __init__(self,scr,siz,scree):
-        global screenSize, size, screen
+    def __init__(self,screenSize,size,screen):
         self.loadSpriteOrTerrain = None
         self.sprites = None
         self.terrains = None
         self.terrainSurface = None
-        screenSize = scr
-        size = siz
-        screen = scree
+        self.screenSize = screenSize
+        self.size = size
+        self.screen = screen
         self.posMode = False
         self.posList = False
         self.mousePos = [0,0]
@@ -32,7 +31,7 @@ class LevelEditor():
         self.editMenu = None
         self.backupGuy = None
         self.levelData = None
-        self.editMenu = pygame_menu.Menu("Edit Sprite.",screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK)
+        self.editMenu = pygame_menu.Menu("Edit Sprite.",self.screenSize[0],self.screenSize[1],theme=pygame_menu.themes.THEME_DARK)
         for arg,argType in vars.spriteArgs.items():
             self.add_widget(arg,argType,{"extraArgs":{},"pos":[0,0]},False,True)
         self.editMenu.add.vertical_margin(30)
@@ -42,7 +41,7 @@ class LevelEditor():
         self.editMenu.add.button("Return",self.editMenu.disable)
         self.editMenu.disable()
 
-    def update(self):
+    def update(self,scroll):
         if self.editMenu:
             if self.editMenu.is_enabled():
                 self.edit_menu()
@@ -52,7 +51,8 @@ class LevelEditor():
             self.selectedIm[1].x = self.levelEditAssets[self.selected].x
             self.selectedIm[1].y = self.levelEditAssets[self.selected].y
         mouse = pygame.mouse.get_pressed(3)
-        self.mousePos = (math.floor((pygame.mouse.get_pos()[0]-24)/64)*64,math.floor((pygame.mouse.get_pos()[1]-24)/64)*64)
+        print(scroll)
+        self.mousePos = ((pygame.mouse.get_pos()[0]-24+scroll[0])//64*64,(pygame.mouse.get_pos()[1]-24+scroll[1])//64*64)
         if any(mouse):
             mouseRect = pygame.Rect(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)
             clicked = mouseRect.collidelist(list(self.levelEditAssets.values()))
@@ -69,11 +69,11 @@ class LevelEditor():
                 self.selected = list(self.levelEditAssets.keys())[clicked]
                 self.prevGridPos = [-1,-1]
             else: # Didn't click an asset, could've clicked a grid spot
-                mouseRect.topleft = (mouseRect.x-24,mouseRect.y-24)
-                if not (bind(mouseRect.x,size[0],0)[1] or bind(mouseRect.y,size[1],0)[1]): # WE ON DA GRID
+                mouseRect.topleft = (mouseRect.x-24+scroll[0],mouseRect.y-24+scroll[1])
+                if not (bind(mouseRect.x,self.size[0],0)[1] or bind(mouseRect.y,self.size[1],0)[1]): # WE ON DA GRID
                     gridPos = []
-                    gridPos.append(math.floor(mouseRect.x / 64))
-                    gridPos.append(math.floor(mouseRect.y / 64))
+                    gridPos.append(mouseRect.x // 64)
+                    gridPos.append(mouseRect.y // 64)
                     notPrev = gridPos != self.prevGridPos
                     self.prevGridPos = gridPos.copy()
                     gridPos[0] = gridPos[0]*64
@@ -205,7 +205,7 @@ class LevelEditor():
                 self.update_sprite()
             if not self.editMenu.is_enabled():
                 return self.selectedIm,False
-            self.editMenu.draw(screen)
+            self.editMenu.draw(self.screen)
             pygame.display.flip()
 
     def pos_mode(self,listMode,widget):
@@ -297,9 +297,13 @@ class LevelEditor():
     def level_reset(self):
         self.prevGridPos = [-1,-1]
         self.editCoords = {}
-        self.editSurface = pygame.Surface((screenSize[0]+500,screenSize[1]))
+        self.editSurface = pygame.Surface((self.screenSize[0]+500,self.screenSize[1]),pygame.SRCALPHA)
+        self.editStaticSurface = pygame.Surface(self.size,pygame.SRCALPHA)
+        self.editSurface.fill((0,0,0),rect=((self.screenSize[0],0),(500,self.screenSize[1])))
         tiled = pygame.image.load("assets/tile.png")
-        self.editSurface.blit(tiled,(24,24))
+        for y in range(self.size[1]//64):
+            for x in range(self.size[0]//64):
+                self.editStaticSurface.blit(tiled,(x*64,y*64))
         self.selectedIm = []
         self.selectedIm.append(pygame.image.load("assets/selected.png"))
         self.selectedIm.append(self.selectedIm[0].get_rect())
@@ -317,7 +321,7 @@ class LevelEditor():
                 im = vars.images[vars.sprites[sprite]]["idle"]
             im = pygame.transform.scale(im,(32,32))
             rect = im.get_rect()
-            rect.x = screenSize[0]+32+numDone*32
+            rect.x = self.screenSize[0]+32+numDone*32
             rect.y = line*32
             self.levelEditAssets[sprite] = rect
             self.editSurface.blit(im,rect)
@@ -330,7 +334,7 @@ class LevelEditor():
             rect = im.get_rect()
             im = pygame.transform.scale(im,(rect.width*2,rect.height*2))
             rect = im.get_rect()
-            rect.x = screenSize[0]+32+numDone*32
+            rect.x = self.screenSize[0]+32+numDone*32
             rect.y = line*32
             self.levelEditAssets[terrain] = rect
             self.editSurface.blit(im,rect)
@@ -340,7 +344,7 @@ class LevelEditor():
             line += 1
         im = pygame.image.load("assets/eraser.png")
         rect = im.get_rect()
-        rect.x = screenSize[0]+32+numDone*32
+        rect.x = self.screenSize[0]+32+numDone*32
         rect.y = line*32
         self.levelEditAssets["eraser"] = rect
         self.editSurface.blit(im,rect)

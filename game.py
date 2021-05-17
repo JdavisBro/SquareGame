@@ -27,9 +27,11 @@ pygame.init()
 
 print("\n\n")
 
-size = (1280, 704) #playfield
+size = (1280, 704) # default playfield
 screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
+
+scroll = [0,0]
 
 pygame.display.set_caption("Game.")
 
@@ -268,7 +270,7 @@ class PlayerSprite(Sprite):
 
 
     def update(self,tick):
-        global newKeyboard
+        global newKeyboard, scroll, screenSize
         player = self.extraArgs["player"]-1
         if keyboard[player]["pause"]:
             pause()
@@ -327,6 +329,14 @@ class PlayerSprite(Sprite):
                 if not self.animation:
                     self.set_animation("collide")
             self.startup -= 0.5 if self.startup > 1 else 0
+        if self.rect.centerx - scroll[0] > screenSize[0]//2:
+            scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
+        elif self.rect.centerx - scroll[0] < screenSize[0]//2:
+            scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
+        if self.rect.centery - scroll[1] > screenSize[1]//2:
+            scroll[1] += self.rect.centery - scroll[1] - screenSize[1]//2
+        elif self.rect.centery - scroll[1] < screenSize[1]//2:
+            scroll[1] += self.rect.centery - scroll[1] - screenSize[1]//2
         super().update(tick)
 
     def collisions(self,binds):
@@ -607,7 +617,7 @@ def returnToMainMenu():
     goMainMenu = True
 
 def reset_level():
-    global staticSurface, levelData, prevGridPos, previousMouse, levelName, bg, spriteTypes, hudSurface, fonts
+    global staticSurface, levelData, prevGridPos, previousMouse, levelName, bg, spriteTypes, hudSurface, fonts, size
 
     with open(f"levels/{levelName}.json","r") as f:
         levelData = json.load(f)
@@ -615,9 +625,13 @@ def reset_level():
     if levelEdit:
         levelEdit.levelData = levelData
 
+    size = levelData['level']['size'].copy()
+    size[0] = size[0]*64
+    size[1] = size[1]*64
+
     spriteTypes = {"none": Sprite,"player": PlayerSprite,"path": PathSprite}
 
-    staticSurface = pygame.Surface(screenSize)
+    staticSurface = pygame.Surface((size[0]+48,size[1]+48))
 
     hudSurface = pygame.Surface(screenSize,flags=pygame.SRCALPHA)
 
@@ -627,8 +641,8 @@ def reset_level():
     for tile in levelData['level']['background']:
         tile = pygame.image.load(f"assets/background/{tile}.png")
         tiles.append(pygame.transform.scale(tile,(64,64)))
-    while y<levelData['level']['size'][1]*64:
-        while x<levelData['level']['size'][0]*64:
+    while y<size[1]:
+        while x<size[0]:
             staticSurface.blit(random.choice(tiles),(x+24,y+24))
             x += 64
         x = 0
@@ -663,10 +677,11 @@ def reset_level():
     if not levelEdit:
         pygame.mouse.set_visible(False)
     else:
+        levelEdit.size = size
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg, size
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -747,9 +762,9 @@ def update(tick):
                     keyboard[i][binds[i][event.key]] = False
     
     if levelEdit and not play:
-        if newKeyboard[0]["left"]:
+        if newKeyboard[0]["reset"]:
             levelData["level"]["keys"] -= 1
-        elif newKeyboard[0]["right"]:
+        elif newKeyboard[0]["action"]:
             levelData["level"]["keys"] += 1
 
     screen.fill((0,0,0))
@@ -762,20 +777,10 @@ def update(tick):
     if not sprites[0].extraArgs["dead"]:
         [terrain.do_animation() for terrain in terrains if terrain.animation]
     
-    screen.blit(staticSurface,(0,0))
-
-    screen.blit(terrainSurface,(24,24)) # THIS IS WHERE SCREEN SCROLL WOULD GO!
-
-    if levelEdit and not play:
-        selectedIm,play = levelEdit.update()
-        screen.blit(levelEdit.editSurface,(0,0),special_flags=pygame.BLEND_ADD)
-        if selectedIm[1].topleft != (0,0):
-            screen.blit(selectedIm[0],selectedIm[1])
-
-    for sprite in sorted(sprites[1:]): # SPRITES
+    for sprite in sprites[1:]: # SPRITES
         if play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]):
             sprite.update(tick)
-        scrollPos = (list(sprite.rect.topleft)[0]+24-0, list(sprite.rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1]) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
         screen.blit(sprite.image,scrollPos)
 
     if (play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]) and not frameN == 0):
@@ -783,8 +788,31 @@ def update(tick):
 
     if play:
         sprites[0].update(tick)
-    scrollPos = (list(sprites[0].rect.topleft)[0]+24-0, list(sprites[0].rect.topleft)[1]+24-0) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+
+    if levelEdit and not play:
+        scroll[0] += 8 if keyboard[0]["right"] else -8 if keyboard[0]["left"] else 0
+        scroll[1] += 8 if keyboard[0]["down"] else -8 if keyboard[0]["up"] else 0
+
+    scroll[0] = bind(scroll[0],size[0]+48-screenSize[0],0)[0]
+    scroll[1] = bind(scroll[1],size[1]+48-screenSize[1],0)[0]
+
+    screen.blit(staticSurface,(0-scroll[0],0-scroll[1]))
+
+    screen.blit(terrainSurface,(24-scroll[0],24-scroll[1])) # THIS IS WHERE SCREEN SCROLL WOULD GO!
+
+    for sprite in sorted(sprites[1:]):
+        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1]) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+        screen.blit(sprite.image,scrollPos)
+
+    scrollPos = (list(sprites[0].rect.topleft)[0]+24-scroll[0], list(sprites[0].rect.topleft)[1]+24-scroll[1]) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
     screen.blit(sprites[0].image,scrollPos)
+
+    if levelEdit and not play:
+        selectedIm,play = levelEdit.update(scroll)
+        screen.blit(levelEdit.editStaticSurface,(24-scroll[0],24-scroll[1]))
+        screen.blit(levelEdit.editSurface,(0,0))
+        if selectedIm[1].topleft != (0,0):
+            screen.blit(selectedIm[0],selectedIm[1])
 
     screen.blit(hudSurface,(0,0))
 
@@ -882,18 +910,6 @@ def darken_apply():
     except:
         pass #joy
 
-def set_level_complete_action(levelCompleteAction, *args, **kwargs):
-    userPrefs["levelCompleteAction"] = levelCompleteAction[1]
-    light_apply()
-
-def set_timer_start(timerStart, *args, **kwargs):
-    userPrefs["timerStart"] = timerStart[1]
-    light_apply()
-
-def set_automatic_movement(automaticMovement, *args, **kwargs):
-    userPrefs["automaticMovement"] = automaticMovement[1]
-    light_apply()
-
 blankKeyboard = [{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False},{"up":False,"down":False,"left":False,"right":False,"action":False,"pause":False,"reset":False}] # controls and controls menu
 
 def refresh_binds():
@@ -953,24 +969,36 @@ disgards.append(controlsMenu.add.button("Disgard", disgard))
 controlsMenu.add.button("Default", default_controls)
 controlsMenu.add.button("Back", pygame_menu.events.BACK)
 
+def set_preference(a,value,pref,*args,**kwargs):
+    userPrefs[pref] = value
+    light_apply()
 
 preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up preferences menu
-preferencesMenu.add.selector("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)],selector_id="levelCompleteAction",onchange=set_level_complete_action,default=userPrefs["levelCompleteAction"])
-preferencesMenu.add.selector("Timer start ",[("On Level Load",0),("On First Input",1)],selector_id="timerStart",onchange=set_timer_start,default=userPrefs["timerStart"])
-preferencesMenu.add.selector("Movement ",[("Require Action Button",0),("On Direction Press",1)],selector_id="automaticMovement",onchange=set_automatic_movement,default=userPrefs["automaticMovement"])
+prefs = [
+    ("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)], "levelCompleteAction"),
+    ("Timer start ", [("On Level Load",0),("On First Input",1)], "timerStart"),
+    ("Move on ", [("Action Button Press",0),("Direction Press",1)], "automaticMovement")
+]
+[preferencesMenu.add.selector(pref[0],pref[1],selector_id=pref[2],onchange=set_preference,default=userPrefs[pref[2]],pref=pref[2]) for pref in prefs]
+preferencesMenu.add.vertical_margin(20)
 preferencesMenu.add.button("Controls",controlsMenu)
 preferencesMenu.add.vertical_margin(40)
 applies.append(preferencesMenu.add.button("Apply", update_prefs))
 disgards.append(preferencesMenu.add.button("Disgard", disgard))
 preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
+darken_apply()
+
 menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up main menu
 menu.add.button('Play Game', start)
+menu.add.vertical_margin(20)
 levels = list(list(os.walk("levels"))[0][2])
 levels = [f[:-5] for f in levels if f.endswith(".json")]
 levelName = levels[0]
 dropSelect = menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
+menu.add.vertical_margin(20)
 menu.add.button('Preferences',preferencesMenu)
+menu.add.vertical_margin(20)
 menu.add.button('Quit Game', close)
 
 while 1: # Main menu loop (with control input features)

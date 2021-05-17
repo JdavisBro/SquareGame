@@ -1,0 +1,29 @@
+{
+    "level": {
+        "border": "brick",
+        "background":  ["brick0","brick1","brick2","brick3","brick4"],
+        "size": [
+            40,
+            22
+        ],
+        "keys": 0
+    },
+    "sprites": [
+        {
+            "image": "idle",
+            "assetPath": "assets/guy/",
+            "animations": "player",
+            "pos": [
+                64,
+                64
+            ],
+            "type": "player",
+            "extraImages": "player",
+            "extraArgs": {
+                "player": 1,
+                "killable": true
+            }
+        }
+    ],
+    "terrain": []
+}
