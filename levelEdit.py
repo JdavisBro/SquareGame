@@ -51,7 +51,6 @@ class LevelEditor():
             self.selectedIm[1].x = self.levelEditAssets[self.selected].x
             self.selectedIm[1].y = self.levelEditAssets[self.selected].y
         mouse = pygame.mouse.get_pressed(3)
-        print(scroll)
         self.mousePos = ((pygame.mouse.get_pos()[0]-24+scroll[0])//64*64,(pygame.mouse.get_pos()[1]-24+scroll[1])//64*64)
         if any(mouse):
             mouseRect = pygame.Rect(pygame.mouse.get_pos()[0],pygame.mouse.get_pos()[1],1,1)

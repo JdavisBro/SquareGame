@@ -7,6 +7,7 @@ import copy
 
 # External
 import pygame
+import pygame.freetype
 import pygame_menu
 
 # Local
@@ -126,12 +127,15 @@ class Sprite:
         self.image = self.images[image]
         if self.extraArgs["addControl"]:
             self.image = self.image.copy()
-            font_render("munro32",pygame.key.name(userPrefs["binds"][self.extraArgs["addControl"]]).upper(),(24,14),surface=self.image)
+            font_render("munro32",pygame.key.name(userPrefs["binds"][self.extraArgs["addControl"]]).upper(),(24,18),surface=self.image)
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
         self.weight = weight
-        sprites.append(self)
+        if self.extraArgs["player"] == 1:
+            sprites.insert(0,self)
+        else:
+            sprites.append(self)
         if levelEdit:
             levelEdit.editCoords[str(list(self.rect.topleft))][0] = self
 
@@ -267,7 +271,7 @@ class PlayerSprite(Sprite):
         self.direction = None
         self.projected_direction = None
         self.startup = 1
-
+        self.lookFrame = 0
 
     def update(self,tick):
         global newKeyboard, scroll, screenSize
@@ -290,6 +294,7 @@ class PlayerSprite(Sprite):
                 if self.direction != self.projected_direction:
                     self.direction = self.projected_direction
                     self.set_animation("look",self.direction)
+                    self.lookFrame = 0
                 if (keyboard[player]["action"] or userPrefs["automaticMovement"] == 1) and (self.direction is not None and frameN != 0):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
                     rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],(s.extraArgs["goal"] and not s.extraArgs["locked"])))] + [t.rect for t in terrains]
@@ -303,6 +308,8 @@ class PlayerSprite(Sprite):
                         self.direction = None
                         self.projected_direction = None
             accel = self.acceleration*tick
+            if self.direction is not None and not self.fSpeed:
+                self.lookFrame += 1
             if self.fSpeed:
                 if self.direction == 0: #up
                     self.speed[1] = round((self.speed[1] - accel/self.startup) if (self.speed[1]>self.fSpeed*-1) else self.fSpeed*-1,2)
@@ -326,17 +333,36 @@ class PlayerSprite(Sprite):
             if any(binds):
                 self.speed = [0,0]
                 self.fSpeed = 0
+                self.projected_direction = None
+                self.direction = None
                 if not self.animation:
                     self.set_animation("collide")
             self.startup -= 0.5 if self.startup > 1 else 0
-        if self.rect.centerx - scroll[0] > screenSize[0]//2:
-            scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
-        elif self.rect.centerx - scroll[0] < screenSize[0]//2:
-            scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
-        if self.rect.centery - scroll[1] > screenSize[1]//2:
-            scroll[1] += self.rect.centery - scroll[1] - screenSize[1]//2
-        elif self.rect.centery - scroll[1] < screenSize[1]//2:
-            scroll[1] += self.rect.centery - scroll[1] - screenSize[1]//2
+        if self.rect.centerx - scroll[0] > screenSize[0]//2: # RIGHT
+            if not (self.fSpeed and self.direction == 3): # this line is so that scroll doesn't snap back if going after the direction scroll happens
+                scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
+        elif self.rect.centerx - scroll[0] < screenSize[0]//2: # LEFT
+            if not (self.fSpeed and self.direction == 1):
+                scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
+        if self.rect.centery - scroll[1] > screenSize[1]//2: # DOWN
+            if not (self.fSpeed and self.direction == 0):
+                scroll[1] += self.rect.centery - scroll[1] - screenSize[1]//2
+        elif self.rect.centery - scroll[1] < screenSize[1]//2: # UP
+            if not (self.fSpeed and self.direction == 2):
+                scroll[1] += self.rect.centery - scroll[1] - screenSize[1]//2
+        scroll[0] = bind(scroll[0],size[0]+48-screenSize[0],0)[0]
+        scroll[1] = bind(scroll[1],size[1]+48-screenSize[1],0)[0]
+        if (self.lookFrame > 180) and not self.fSpeed:
+            if self.direction == 0:
+                scroll[1] -= bind(self.lookFrame - 180,100,0)[0]
+            elif self.direction == 2:
+                scroll[1] += bind(self.lookFrame - 180,100,0)[0]
+            elif self.direction == 1:
+                scroll[0] += bind(self.lookFrame - 180,100,0)[0]
+            elif self.direction == 3:
+                scroll[0] -= bind(self.lookFrame - 180,100,0)[0]
+        scroll[0] = bind(scroll[0],size[0]+48-screenSize[0],0)[0]
+        scroll[1] = bind(scroll[1],size[1]+48-screenSize[1],0)[0]
         super().update(tick)
 
     def collisions(self,binds):
@@ -737,11 +763,9 @@ def loadSpriteOrTerrain(data,stype):
 if levelEdit:
     levelEdit.loadSpriteOrTerrain = loadSpriteOrTerrain
 
-def font_render(font,text,pos,colour=(255,255,255),surface=screen,antialiasing=True):
-    if surface is None:
-        surface = screen
-    text = fonts[font].render(text,antialiasing,colour)
-    surface.blit(text,pos)
+def font_render(font,text,pos,colour=(255,255,255),bg_colour=None,surface=screen,antialiasing=True):
+    fonts[font].antialiased = antialiasing
+    text = fonts[font].render_to(surface,pos,text,colour,bg_colour)
 
 def update(tick):
     global play, newKeyboard
@@ -820,7 +844,7 @@ def update(tick):
         font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
     if levelData['level']['keys']:
-        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,1),(25,25,25),antialiasing=False)
+        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,7),(25,25,25),antialiasing=False)
 
     if levelEdit:
         font_render("munro24",str(levelEdit.mousePos),(90,0))
@@ -829,17 +853,15 @@ def update(tick):
             pygame.mouse.set_visible(True)
         font_render("munro24",str(pygame.mouse.get_pos()),(400,0))
     t = timer.time_readable(timer.time)
-    font_render("munro24",t,(1216,6),(8,8,200))
-    font_render("munro24",t,(1214,4))
+    font_render("munro24",t,(1216,10),(8,8,200))
+    font_render("munro24",t,(1214,8))
     t = timer.time_readable(timer.levelTime,False)
-    font_render("munro24",t,(1245,35),(200,8,8))
-    font_render("munro24",t,(1243,33))
+    font_render("munro24",t,(1245,40),(200,8,8))
+    font_render("munro24",t,(1243,38))
 
     if debug and sprites[0].extraArgs["player"]:
-        debugTextBg.fill((0,0,0))
-        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(sprites[0].rect.x)} y {add_zeros(sprites[0].rect.y)} dir {add_zeros(sprites[0].direction,0)} pro {add_zeros(sprites[0].projected_direction,0)} T {add_zeros(sprites[0].rect.top)} L {add_zeros(sprites[0].rect.left)} R {add_zeros(sprites[0].rect.right)} B {add_zeros(sprites[0].rect.bottom)} | s {add_zeros(sprites[0].fSpeed,1)} {add_zeros(sprites[0].speed[0],1)} {add_zeros(sprites[0].speed[1],1)} su {add_zeros(sprites[0].startup,1)} | Ani: {add_zeros(sprites[0].animationFrame)} {sprites[0].animation}",(4,0),(255,255,255),surface=debugTextBg) # The speed values and negetive numbers are kinda fucked but i dont care.
-        font_render("consolas10",f"{sprites[0].extraArgs}",(4,10),(255,255,255),surface=debugTextBg)
-        screen.blit(debugTextBg,(0,730))
+        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(sprites[0].rect.x)} y {add_zeros(sprites[0].rect.y)} dir {add_zeros(sprites[0].direction,0)} pro {add_zeros(sprites[0].projected_direction,0)} T {add_zeros(sprites[0].rect.top)} L {add_zeros(sprites[0].rect.left)} R {add_zeros(sprites[0].rect.right)} B {add_zeros(sprites[0].rect.bottom)} | s {add_zeros(sprites[0].fSpeed,1)} {add_zeros(sprites[0].speed[0],1)} {add_zeros(sprites[0].speed[1],1)} su {add_zeros(sprites[0].startup,1)} | Scroll: {scroll} | Ani: {add_zeros(sprites[0].animationFrame)} {sprites[0].animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
+        font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in sprites[0].extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
 
 def add_zeros(text,zeros=4):
     if text is None:
@@ -852,10 +874,10 @@ def add_zeros(text,zeros=4):
 fonts = {} # FONTS
 
 for f in [("munro24","assets/fonts/munro/regular.ttf",24),("munro18","assets/fonts/munro/small.ttf",18),("munro32","assets/fonts/munro/regular.ttf",32)]:
-    fonts[f[0]] = pygame.font.Font(f[1],f[2])
+    fonts[f[0]] = pygame.freetype.Font(f[1],f[2])
 
 for f in [("arial60","arial",60),("consolas10","consolas",10)]: # May be exclusive to windows so perhaps check.
-    fonts[f[0]] = pygame.font.SysFont(f[1],f[2])
+    fonts[f[0]] = pygame.freetype.SysFont(f[1],f[2])
 
 pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # PAUSE MENU
 pauseMenu.add.button('Continue', unpause)
