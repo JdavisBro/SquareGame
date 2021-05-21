@@ -17,11 +17,9 @@ if getattr(sys, 'frozen', False):
     application_path = os.path.dirname(sys.executable)
 elif __file__:
     application_path = os.path.dirname(__file__)
-
 prefsPath = os.path.join(application_path, "userPrefs.json")
 
 os.chdir(getattr(sys,"_MEIPASS","."))
-
 debug = True if "debug" in sys.argv else False
 
 pygame.init()
@@ -31,13 +29,10 @@ print("\n\n")
 size = (1280, 704) # default playfield
 screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
-
 scroll = [0,0]
 
 pygame.display.set_caption("Game.")
-
 icon = pygame.image.load("assets/icon.png")
-
 pygame.display.set_icon(icon)
 
 if 'levelEdit' in sys.argv:
@@ -49,22 +44,22 @@ else:
     screen = pygame.display.set_mode(screenSize)
 
 frameN = 1
-
 clock = pygame.time.Clock()
 
 def bind(value,upper,lower):
-    if value > upper:
-        return upper, True
-    if value < lower:
-        return lower, True
+    if value > upper: return upper, True
+    if value < lower: return lower, True
     return value, False
 
 class Terrain:
-    def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",scale=4,animation=None,animations=None):
+    def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",material="none",scale=4,animation=None,animations=None):
         global levelEdit
-        self.image = pygame.image.load(assetPath+image)
-        self.rect = self.image.get_rect()
-        self.image = pygame.transform.scale(self.image,(self.rect.width*scale,self.rect.height*scale))
+        index = image
+        if not isinstance(vars.images[vars.terrains[assetPath]][index],pygame.Surface):
+            vars.images[vars.terrains[assetPath]][index] = pygame.image.load(assetPath+vars.images[vars.terrains[assetPath]][index])
+            self.rect = vars.images[vars.terrains[assetPath]][index].get_rect()
+            vars.images[vars.terrains[assetPath]][index] = pygame.transform.scale(vars.images[vars.terrains[assetPath]][index],(self.rect.width*scale,self.rect.height*scale))
+        self.image = vars.images[vars.terrains[assetPath]][index]
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
@@ -75,6 +70,7 @@ class Terrain:
             self.animation = None
         self.animationFrame = 0
         self.animationFrames = 0
+        self.material = material
         terrainSurface.blit(self.image,self.rect)
         terrains.append(self)
         if levelEdit:
@@ -97,16 +93,9 @@ class Sprite:
         extraImages="default",extraArgs={},
         animations=None,weight=0
         ):
-        global levelEdit
+        global levelEdit, triggers
         self.aliveFrames = 0
-        self.extraArgs = {
-            "dead":False,"player":False,"tangable":True,
-            "kill":False,"killable":False,"movable":False,
-            "key":False,"goal":False,"locked":False,
-            "won":False,"path":None,"pathSpeed":1,
-            "pathStartup":1,"pathCooldown": 60,"pathRepeat":True,
-            "addControl": None,
-        } # Default Args
+        self.extraArgs = vars.defaultExtraArgs.copy() # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
         if animations:
             self.animations = vars.animations[animations]
@@ -128,6 +117,8 @@ class Sprite:
         if self.extraArgs["addControl"]:
             self.image = self.image.copy()
             font_render("munro32",pygame.key.name(userPrefs["binds"][self.extraArgs["addControl"]]).upper(),(24,18),surface=self.image)
+        if self.extraArgs["triggerId"]:
+            triggers[self.extraArgs["triggerId"]] = False
         self.rect = self.image.get_rect()
         self.rect.x = pos[0]
         self.rect.y = pos[1]
@@ -161,11 +152,8 @@ class Sprite:
             return
         animationChanged = False
         if not self.extraArgs["player"]:
-            playerNear = self.rect.copy()
-            playerNear.x -= 64
-            playerNear.y -= 64
-            playerNear.width += 64*2
-            playerNear.height += 64*2
+            playerNear = pygame.Rect(self.rect.x-self.rect.width//2,self.rect.y-self.rect.height//2,self.rect.width*2,self.rect.height*2)
+            display_rect(playerNear)
             if playerNear.colliderect(sprites[0].rect):
                 playerNear = True
                 if "playerNear" in self.animations and self.animation == self.animations["idle"][1]:
@@ -209,7 +197,7 @@ class Sprite:
             if self.animationTimeout[1]:
                 self.animationTimeout[1] = False
                 if "playerNear" in self.animations and playerNear:
-                    self.set_animation("playerNear")
+                    self.animation = self.animations["playerNear"]
                 else:
                     self.set_animation("idle")
             if animationChanged:
@@ -283,18 +271,19 @@ class PlayerSprite(Sprite):
             return
         if not self.extraArgs["dead"] and not self.extraArgs["won"]:
             if keyboard[player]["up"]:
-                self.projected_direction = 0
+                self.projected_direction = 0 if (0 != self.direction) else self.projected_direction
             elif keyboard[player]["down"]:
-                self.projected_direction = 2
+                self.projected_direction = 2 if 2 != self.direction else self.projected_direction
             elif keyboard[player]["left"]:
-                self.projected_direction = 3
+                self.projected_direction = 3 if 3 != self.direction else self.projected_direction
             elif keyboard[player]["right"]:
-                self.projected_direction = 1
+                self.projected_direction = 1 if 1 != self.direction else self.projected_direction
             if not self.fSpeed:
                 if self.direction != self.projected_direction:
                     self.direction = self.projected_direction
-                    self.set_animation("look",self.direction)
-                    self.lookFrame = 0
+                    if self.direction is not None:
+                        self.set_animation("look",self.direction)
+                        self.lookFrame = 0
                 if (keyboard[player]["action"] or userPrefs["automaticMovement"] == 1) and (self.direction is not None and frameN != 0):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
                     rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],(s.extraArgs["goal"] and not s.extraArgs["locked"])))] + [t.rect for t in terrains]
@@ -303,6 +292,7 @@ class PlayerSprite(Sprite):
                         self.fSpeed = 40
                         self.startup = 15
                         self.set_animation("go",self.direction)
+                        self.projected_direction = None
                     else:
                         self.image = self.images["idle"]
                         self.direction = None
@@ -333,7 +323,6 @@ class PlayerSprite(Sprite):
             if any(binds):
                 self.speed = [0,0]
                 self.fSpeed = 0
-                self.projected_direction = None
                 self.direction = None
                 if not self.animation:
                     self.set_animation("collide")
@@ -367,11 +356,14 @@ class PlayerSprite(Sprite):
 
     def collisions(self,binds):
         global collectedKeys
-        spritesNoMe = [sprite for sprite in sprites if sprite != self and (sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"])]
+        spritesNoMe = [sprite for sprite in sprites if sprite != self and ((sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"]) or sprite.extraArgs["triggerId"])]
         rects = [sprite.rect for sprite in spritesNoMe]
         collides = self.rect.collidelistall(rects)
         if collides:
             for collision in collides:
+                if spritesNoMe[collision].extraArgs["triggerId"]:
+                    triggers[spritesNoMe[collision].extraArgs["triggerId"]] = True
+                    continue
                 if (spritesNoMe[collision].extraArgs["goal"] and not spritesNoMe[collision].extraArgs["locked"]):
                     self.set_animation("celebrate")
                     self.extraArgs["won"] = True
@@ -428,10 +420,14 @@ class PathSprite(Sprite):
             self.extraArgs["path"] = [self.rect.topleft]
 
     def update(self,tick):
-        if not self.extraArgs["dead"] and ((not self.extraArgs["pathRepeat"] and not self.done) or self.extraArgs["pathRepeat"]):
+        if not self.extraArgs["dead"] and (((not self.extraArgs["pathRepeat"] and not self.done) or self.extraArgs["pathRepeat"])):
             if self.pathCooldown:
                 self.pathCooldown -= 1
             else:
+                if self.extraArgs["pathTrigger"]:
+                    if not triggers[self.extraArgs["pathTrigger"]]:
+                        super().update()
+                        return
                 pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
                 if self.startupImmunity == 0:
                     movement = self.extraArgs["pathSpeed"]/self.startup*tick
@@ -501,6 +497,8 @@ class PathSprite(Sprite):
         collides = self.rect.collidelistall(rects)
         if collides:
             for collision in collides:
+                if self.extraArgs["goal"] and spritesNoMe[collision].extraArgs["player"]:
+                    return
                 if self.extraArgs["kill"] and spritesNoMe[collision].extraArgs["killable"]:
                     spritesNoMe[collision].kill()
                     return
@@ -707,7 +705,7 @@ def reset_level():
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg, size
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg, size, triggers
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -719,6 +717,8 @@ def reset():
     terrains = []
 
     sprites = []
+
+    triggers = {}
 
     terrainSurface = pygame.Surface(size,flags=pygame.SRCALPHA) 
 
@@ -767,8 +767,14 @@ def font_render(font,text,pos,colour=(255,255,255),bg_colour=None,surface=screen
     fonts[font].antialiased = antialiasing
     text = fonts[font].render_to(surface,pos,text,colour,bg_colour)
 
+rectsToFill = []
+def display_rect(rect,colour=(255,0,0,100)):
+    rectsToFill.append((rect,colour))
+
 def update(tick):
-    global play, newKeyboard
+    global play, newKeyboard, rectsToFill
+
+    rectsToFill = []
 
     newKeyboard = copy.deepcopy(blankKeyboard)
 
@@ -804,7 +810,7 @@ def update(tick):
     for sprite in sprites[1:]: # SPRITES
         if play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]):
             sprite.update(tick)
-        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1]) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
         screen.blit(sprite.image,scrollPos)
 
     if (play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]) and not frameN == 0):
@@ -822,13 +828,13 @@ def update(tick):
 
     screen.blit(staticSurface,(0-scroll[0],0-scroll[1]))
 
-    screen.blit(terrainSurface,(24-scroll[0],24-scroll[1])) # THIS IS WHERE SCREEN SCROLL WOULD GO!
+    screen.blit(terrainSurface,(24-scroll[0],24-scroll[1]))
 
     for sprite in sorted(sprites[1:]):
-        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1]) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
         screen.blit(sprite.image,scrollPos)
 
-    scrollPos = (list(sprites[0].rect.topleft)[0]+24-scroll[0], list(sprites[0].rect.topleft)[1]+24-scroll[1]) # THIS IS ALSO WHERE SCREEN SCROLL WOULD GO!
+    scrollPos = (list(sprites[0].rect.topleft)[0]+24-scroll[0], list(sprites[0].rect.topleft)[1]+24-scroll[1])
     screen.blit(sprites[0].image,scrollPos)
 
     if levelEdit and not play:
@@ -852,6 +858,11 @@ def update(tick):
         if not pygame.mouse.get_visible():
             pygame.mouse.set_visible(True)
         font_render("munro24",str(pygame.mouse.get_pos()),(400,0))
+        if rectsToFill and pygame.key.get_pressed()[pygame.K_RETURN]:
+            surface = pygame.Surface(size,pygame.SRCALPHA)
+            for i in rectsToFill:
+                surface.fill(i[1],i[0],pygame.BLEND_RGBA_ADD)
+            screen.blit(surface,(24,24))
     t = timer.time_readable(timer.time)
     font_render("munro24",t,(1216,10),(8,8,200))
     font_render("munro24",t,(1214,8))
@@ -880,10 +891,7 @@ for f in [("arial60","arial",60),("consolas10","consolas",10)]: # May be exclusi
     fonts[f[0]] = pygame.freetype.SysFont(f[1],f[2])
 
 pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # PAUSE MENU
-pauseMenu.add.button('Continue', unpause)
-pauseMenu.add.button('Reset Level', reset)
-pauseMenu.add.button('Main Menu',returnToMainMenu)
-pauseMenu.add.button('Quit Game', pygame_menu.events.EXIT)
+[pauseMenu.add.button(*i) for i in [('Continue',unpause),('Reset Level',reset),('Main Menu',returnToMainMenu),('Quit Game',close)]]
 pauseMenu.disable()
 
 levelName = None
@@ -955,7 +963,7 @@ def get_input():
     global inputMode
     inputMode[2] += 1
     if inputMode[2] > 600:
-        button.set_title(f"{inputMode[0]} | {inputMode[1]}")
+        button.set_title(f"{inputMode[0]} | {pygame.key.name(inputMode[1])}")
         button.set_border(0,(0,0,0))
         inputMode = []
         return
@@ -973,7 +981,7 @@ def set_input(key):
     light_apply()
 
 def start_input_mode(bind,currentKey):
-    global inputMode
+    global inputMode,button
     inputMode = [bind,currentKey,0]
     button = controlsMenu.get_widget(f"bind{bind}")
     button.set_title(f"{bind} | ...")
@@ -996,11 +1004,7 @@ def set_preference(a,value,pref,*args,**kwargs):
     light_apply()
 
 preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up preferences menu
-prefs = [
-    ("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)], "levelCompleteAction"),
-    ("Timer start ", [("On Level Load",0),("On First Input",1)], "timerStart"),
-    ("Move on ", [("Action Button Press",0),("Direction Press",1)], "automaticMovement")
-]
+prefs = [("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)], "levelCompleteAction"),("Timer start ", [("On Level Load",0),("On First Input",1)], "timerStart"),("Move on ", [("Action Button Press",0),("Direction Press",1)], "automaticMovement")]
 [preferencesMenu.add.selector(pref[0],pref[1],selector_id=pref[2],onchange=set_preference,default=userPrefs[pref[2]],pref=pref[2]) for pref in prefs]
 preferencesMenu.add.vertical_margin(20)
 preferencesMenu.add.button("Controls",controlsMenu)
@@ -1018,15 +1022,23 @@ levels = list(list(os.walk("levels"))[0][2])
 levels = [f[:-5] for f in levels if f.endswith(".json")]
 levelName = levels[0]
 dropSelect = menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
-menu.add.vertical_margin(20)
-menu.add.button('Preferences',preferencesMenu)
-menu.add.vertical_margin(20)
-menu.add.button('Quit Game', close)
+for i in [('Preferences',preferencesMenu),('Quit Game', close)]:
+    menu.add.vertical_margin(20)
+    menu.add.button(*i)
 
-while 1: # Main menu loop (with control input features)
-    if not inputMode:
-        menu.update(pygame.event.get())
-    else:
-        get_input()
-    menu.draw(screen)
-    pygame.display.flip()
+def run():
+    while 1: # Main menu loop (with control input features)
+        if not inputMode:
+            events = pygame.event.get()
+            menu.update(events)
+            for event in events:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        print(menu.get_current() in [preferencesMenu,controlsMenu])
+                        if menu.get_current() in [preferencesMenu,controlsMenu]:
+                            menu.close()
+        else:
+            get_input()
+        menu.draw(screen)
+        pygame.display.flip()
+run()

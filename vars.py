@@ -45,7 +45,7 @@ images = {
         "idle": "idle.png"
     },
     "grass": {
-        0: "0.png"
+        0: "0.png",
     },
     "brick": {
         0: "0.png"
@@ -54,6 +54,9 @@ images = {
         0: "0.png"
     },
 }
+
+for i in range(16):
+    images["grass"][i] = f"{i}.png"
 
 animations = {
     "player": {
@@ -93,6 +96,7 @@ spriteArgs = {
     "assetPath": ["text","assets/"],
     "extraImages": ["dropdown",list(images.keys()),"default"],
     "animations": ["dropdown",list(animations.keys()),None],
+    "weight": ["flint",0,"int"]
 }
 
 spriteExtraArgs = {
@@ -108,5 +112,20 @@ spriteExtraArgs = {
     "pathStartup": ["flint",1,"float"],
     "pathCooldown": ["flint",60,"float"],
     "pathRepeat": ["toggle",1],
-    "addControl": ["text",None]
+    "pathTrigger": ["text",None],
+    "addControl": ["text",None],
+    "triggerId": ["text",None]
+}
+
+defaultExtraArgs = {
+    "dead":False,"player":False,"tangable":True,
+    "kill":False,"killable":False,"movable":False,
+    "key":False,"goal":False,"locked":False,
+    "won":False,"path":None,"pathSpeed":1,
+    "pathStartup":1,"pathCooldown": 60,"pathRepeat":True,
+    "pathTrigger": None,"addControl": None,"triggerId": None
+} # Default Args
+
+sfxMap = {
+    "default": "hit"
 }
