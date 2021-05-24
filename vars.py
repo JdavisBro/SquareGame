@@ -106,6 +106,7 @@ spriteExtraArgs = {
     "player": ["flint",0,"int"],
     "tangable": ["toggle",1],
     "kill": ["toggle",0],
+    "killable": ["toggle",0],
     "movable": ["toggle",0],
     "key": ["toggle",0],
     "goal": ["toggle",0],

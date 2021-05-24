@@ -1,0 +1,561 @@
+{
+    "level": {
+        "border": "grass",
+        "background": [
+            "grass0",
+            "grass1",
+            "grass2",
+            "grass3",
+            "grass4"
+        ],
+        "size": [
+            20,
+            11
+        ],
+        "keys": 0
+    },
+    "sprites": [
+        {
+            "image": "idle",
+            "assetPath": "assets/guy/",
+            "animations": "player",
+            "pos": [
+                64,
+                64
+            ],
+            "type": "player",
+            "extraImages": "player",
+            "extraArgs": {
+                "player": 1,
+                "killable": true
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "stone",
+            "assetPath": "assets/stone/",
+            "pos": [
+                64,
+                384
+            ],
+            "extraArgs": {
+                "movable": true
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "stone",
+            "assetPath": "assets/stone/",
+            "pos": [
+                1152,
+                512
+            ],
+            "extraArgs": {
+                "movable": true
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "goal",
+            "assetPath": "assets/goal/",
+            "pos": [
+                1216,
+                64
+            ],
+            "extraArgs": {
+                "goal": true
+            },
+            "animations": "goal"
+        }
+    ],
+    "terrain": [
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                256,
+                0
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                256,
+                64
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                256,
+                128
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                256,
+                192
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                256,
+                256
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                320
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                192
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                128
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                64
+            ]
+        },
+        {
+            "image": 4,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                128,
+                320
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                0,
+                320
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                128,
+                512
+            ]
+        },
+        {
+            "image": 10,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                128,
+                448
+            ]
+        },
+        {
+            "image": 7,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                128,
+                576
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                64,
+                320
+            ]
+        },
+        {
+            "image": 8,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                64,
+                448
+            ]
+        },
+        {
+            "image": 5,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                64,
+                576
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                64,
+                512
+            ]
+        },
+        {
+            "image": 1,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                384
+            ]
+        },
+        {
+            "image": 5,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                256,
+                320
+            ]
+        },
+        {
+            "image": 3,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                512
+            ]
+        },
+        {
+            "image": 1,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                640,
+                192
+            ]
+        },
+        {
+            "image": 6,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                640,
+                128
+            ]
+        },
+        {
+            "image": 6,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                640,
+                64
+            ]
+        },
+        {
+            "image": 6,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                640,
+                0
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                640
+            ]
+        },
+        {
+            "image": 8,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1152,
+                640
+            ]
+        },
+        {
+            "image": 14,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1216,
+                640
+            ]
+        },
+        {
+            "image": 10,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                384,
+                576
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                384,
+                640
+            ]
+        },
+        {
+            "image": 11,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                576
+            ]
+        },
+        {
+            "image": 7,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                448,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                384,
+                0
+            ]
+        },
+        {
+            "image": 15,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                576,
+                320
+            ]
+        },
+        {
+            "image": 1,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                768,
+                256
+            ]
+        },
+        {
+            "image": 6,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                768,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                512,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                576,
+                512
+            ]
+        },
+        {
+            "image": 12,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                320,
+                256
+            ]
+        },
+        {
+            "image": 2,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                640,
+                448
+            ]
+        },
+        {
+            "image": 7,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                768,
+                448
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                704,
+                448
+            ]
+        },
+        {
+            "image": 3,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                768,
+                384
+            ]
+        },
+        {
+            "image": 5,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1216,
+                192
+            ]
+        },
+        {
+            "image": 14,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1216,
+                128
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1152,
+                128
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1088,
+                128
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1024,
+                128
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                960,
+                128
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                896,
+                128
+            ]
+        },
+        {
+            "image": 9,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                832,
+                128
+            ]
+        },
+        {
+            "image": 8,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                768,
+                128
+            ]
+        },
+        {
+            "image": 5,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                768,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                832,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                896,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                960,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1024,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1088,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1152,
+                0
+            ]
+        },
+        {
+            "image": 13,
+            "assetPath": "assets/terrain/grass/",
+            "pos": [
+                1216,
+                0
+            ]
+        }
+    ]
+}

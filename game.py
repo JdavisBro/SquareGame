@@ -49,6 +49,18 @@ def bind(value,upper,lower):
     if value < lower: return lower, True
     return value, False
 
+def bind_rect_to_screen(rect):
+    binds = []
+    rect.top,binded = bind(rect.top,size[1],0)
+    binds.append(binded)
+    rect.left,binded = bind(rect.left,size[0],0)
+    binds.append(binded)
+    rect.bottom,binded = bind(rect.bottom,size[1],0)
+    binds.append(binded)
+    rect.right,binded = bind(rect.right,size[0],0)
+    binds.append(binded)
+    return rect,binds
+
 class Terrain:
     def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",material="none",scale=4,animation=None,animations=None):
         global levelEdit
@@ -310,15 +322,7 @@ class PlayerSprite(Sprite):
                 elif self.direction == 3: #left
                     self.speed[0] = round((self.speed[0] - accel/self.startup) if (self.speed[0]>self.fSpeed*-1) else self.fSpeed*-1,2)
             self.rect = self.rect.move([round(self.speed[0]),round(self.speed[1])])
-            binds = []
-            self.rect.top,binded = bind(self.rect.top,size[1],0)
-            binds.append(binded)
-            self.rect.left,binded = bind(self.rect.left,size[0],0)
-            binds.append(binded)
-            self.rect.bottom,binded = bind(self.rect.bottom,size[1],0)
-            binds.append(binded)
-            self.rect.right,binded = bind(self.rect.right,size[0],0)
-            binds.append(binded)
+            self.rect,binds = bind_rect_to_screen(self.rect) 
             binds = self.collisions(binds)
             if any(binds):
                 self.speed = [0,0]
@@ -388,7 +392,10 @@ class PlayerSprite(Sprite):
                         tempRect.right = self.rect.left
                     r = [terrain.rect for terrain in terrains] + [sprite.rect for sprite in sprites if sprite.extraArgs["tangable"] and (sprite != self and sprite != spritesNoMe[collision])]
                     col = tempRect.collidelist(r)
-                    if col != -1:
+                    tempRect,moveBinds = bind_rect_to_screen(tempRect)
+                    if any(moveBinds):
+                        stop = True
+                    elif col != -1:
                         stop = True
                         if self.direction == 0: #up
                             tempRect.top = r[col].bottom
@@ -1069,9 +1076,8 @@ def run():
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        print(menu.get_current() in [preferencesMenu,controlsMenu])
                         if menu.get_current() in [preferencesMenu,controlsMenu]:
-                            menu.close()
+                            menu.get_current().get_widgets()[-1].apply()
         else:
             get_input()
         menu.draw(screen)
