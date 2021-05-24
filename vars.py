@@ -41,6 +41,9 @@ images = {
         "d": "d.png",
         "space": "space.png"
     },
+    "stone": {
+        "idle": "idle.png"
+    },
     "default": {
         "idle": "idle.png"
     },
@@ -83,7 +86,7 @@ binds = [
     {pygame.K_UP:"up",pygame.K_DOWN:"down",pygame.K_LEFT:"left",pygame.K_RIGHT:"right",pygame.K_KP0:"action"}
     ]
 
-sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle"}
+sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle","assets/stone/":"stone"}
 
 terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick","assets/terrain/phantombrick/": "phantombrick"}
 

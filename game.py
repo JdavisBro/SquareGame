@@ -24,8 +24,6 @@ debug = True if "debug" in sys.argv else False
 
 pygame.init()
 
-print("\n\n")
-
 size = (1280, 704) # default playfield
 screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
@@ -286,7 +284,9 @@ class PlayerSprite(Sprite):
                         self.lookFrame = 0
                 if (keyboard[player]["action"] or userPrefs["automaticMovement"] == 1) and (self.direction is not None and frameN != 0):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
-                    rects = [s.rect for s in sprites if not any((s == self,not s.extraArgs["tangable"],s.extraArgs["key"],(s.extraArgs["goal"] and not s.extraArgs["locked"])))] + [t.rect for t in terrains]
+                    def sprite_movement_check(s):
+                        return not any((s == self, not s.extraArgs["tangable"], s.extraArgs["key"], (s.extraArgs["goal"] and not s.extraArgs["locked"]), s.extraArgs["movable"]))
+                    rects = [s.rect for s in sprites if sprite_movement_check(s)] + [t.rect for t in terrains]
                     collides = movedRect.collidelistall(rects)
                     if (terrainSurface.get_rect().contains(movedRect)) and not collides:
                         self.fSpeed = 40
@@ -375,16 +375,43 @@ class PlayerSprite(Sprite):
                     self.kill()
                 if self.extraArgs["kill"] and spritesNoMe[collision].extraArgs["killable"]:
                     spritesNoMe[collision].kill()
-                if self.fSpeed:
+                stop = None
+                if spritesNoMe[collision].extraArgs["movable"]:
+                    tempRect = spritesNoMe[collision].rect.copy()
+                    if self.direction == 0: #up
+                        tempRect.bottom = self.rect.top
+                    elif self.direction == 1: #right
+                        tempRect.left = self.rect.right
+                    elif self.direction == 2: #down
+                        tempRect.top = self.rect.bottom
+                    elif self.direction == 3: #left
+                        tempRect.right = self.rect.left
+                    r = [terrain.rect for terrain in terrains] + [sprite.rect for sprite in sprites if sprite.extraArgs["tangable"] and (sprite != self and sprite != spritesNoMe[collision])]
+                    col = tempRect.collidelist(r)
+                    if col != -1:
+                        stop = True
+                        if self.direction == 0: #up
+                            tempRect.top = r[col].bottom
+                        elif self.direction == 1: #right
+                            tempRect.right = r[col].left
+                        elif self.direction == 2: #down
+                            tempRect.bottom = r[col].top
+                        elif self.direction == 3: #left
+                            tempRect.left = r[col].right
+                    else:
+                        if self.fSpeed > 20:
+                            self.fSpeed = self.fSpeed//8
+                    spritesNoMe[collision].rect = tempRect
+                if (self.fSpeed and not spritesNoMe[collision].extraArgs["movable"]) or stop:
                     binds.append(True)
                     if self.direction == 0: #up
-                        self.rect.top = rects[collision].bottom
+                        self.rect.top = spritesNoMe[collision].rect.bottom
                     elif self.direction == 1: #right
-                        self.rect.right = rects[collision].left
+                        self.rect.right = spritesNoMe[collision].rect.left
                     elif self.direction == 2: #down
-                        self.rect.bottom = rects[collision].top
+                        self.rect.bottom = spritesNoMe[collision].rect.top
                     elif self.direction == 3: #left
-                        self.rect.left = rects[collision].right
+                        self.rect.left = spritesNoMe[collision].rect.right
                     spritesNoMe[collision].startup = 30
                     if "collide" in spritesNoMe[collision].animations:
                         spritesNoMe[collision].set_animation("collide")
@@ -672,22 +699,30 @@ def reset_level():
         x = 0
         y += 64
 
-    im = pygame.image.load(f"assets/borders/{levelData['level']['border']}/corner.png")
+    im = pygame.image.load(f"assets/borders/{levelData['level']['border']}/corner.png") # Corner piece
     im = pygame.transform.scale(im,(6*4,6*4))
     staticSurface.blit(im,(0,0))
     staticSurface.blit(im,(levelData['level']['size'][0]*64+24,0))
     staticSurface.blit(im,(0,levelData['level']['size'][1]*64+24))
     staticSurface.blit(im,(levelData['level']['size'][0]*64+24,levelData['level']['size'][1]*64+24))
-    im = pygame.image.load(f"assets/borders/{levelData['level']['border']}/side.png")
+    im = pygame.image.load(f"assets/borders/{levelData['level']['border']}/left.png") # Left piece
     im = pygame.transform.scale(im,(24,64))
+    oIm = None
+    if os.path.exists(f"assets/borders/{levelData['level']['border']}/right.png"):
+        oIm = pygame.image.load(f"assets/borders/{levelData['level']['border']}/right.png")
+        oIm = pygame.transform.scale(oIm,(24,64))
     for i in range(levelData['level']['size'][1]):
-        staticSurface.blit(im,(0,24+(i*64)))
-        staticSurface.blit(im,(levelData['level']['size'][0]*64+24,24+(i*64)))
+        staticSurface.blit(im,(0,24+(i*64))) # Blit to left
+        staticSurface.blit(oIm if oIm else im,(levelData['level']['size'][0]*64+24,24+(i*64))) # Blit to right
     im = pygame.image.load(f"assets/borders/{levelData['level']['border']}/top.png")
     im = pygame.transform.scale(im,(64,24))
+    oIm = None
+    if os.path.exists(f"assets/borders/{levelData['level']['border']}/bottom.png"):
+        oIm = pygame.image.load(f"assets/borders/{levelData['level']['border']}/bottom.png")
+        oIm = pygame.transform.scale(oIm,(64,24))
     for i in range(levelData['level']['size'][0]):
         staticSurface.blit(im,(24+(i*64),0))
-        staticSurface.blit(im,(24+(i*64),levelData['level']['size'][1]*64+24))
+        staticSurface.blit(oIm if oIm else im,(24+(i*64),levelData['level']['size'][1]*64+24))
 
     im = pygame.image.load("assets/timerBg.png")
     im = pygame.transform.scale(im,(128,64))
