@@ -95,7 +95,7 @@ class LevelEditor():
                     self.prevGridPos = gridPos.copy()
                     gridPos[0] = gridPos[0]*64
                     gridPos[1] = gridPos[1]*64
-                    if mouse[0]: # Ayo we left clicked on the motherfuckin grid
+                    if mouse[0]: # Ayo we left clicked on the  grid
                         if notPrev and self.posMode:
                             return self.set_pos(gridPos)
                         if notPrev and self.selected:

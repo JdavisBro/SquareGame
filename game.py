@@ -43,6 +43,7 @@ else:
 
 frameN = 1
 clock = pygame.time.Clock()
+playerSprite = None
 
 def bind(value,upper,lower):
     if value > upper: return upper, True
@@ -103,7 +104,7 @@ class Sprite:
         extraImages="default",extraArgs={},
         animations=None,weight=0
         ):
-        global levelEdit, triggers
+        global levelEdit, triggers, playerSprite
         self.aliveFrames = 0
         self.extraArgs = vars.defaultExtraArgs.copy() # Default Args
         self.extraArgs.update(extraArgs) # Add args to defaults
@@ -135,6 +136,7 @@ class Sprite:
         self.weight = weight
         if self.extraArgs["player"] == 1:
             sprites.insert(0,self)
+            playerSprite = self
         else:
             sprites.append(self)
         if levelEdit:
@@ -161,10 +163,10 @@ class Sprite:
         if not self.animations or not self.animation:
             return
         animationChanged = False
-        if not self.extraArgs["player"]:
+        if not self.extraArgs["player"] and playerSprite:
             playerNear = pygame.Rect(self.rect.x-self.rect.width//2,self.rect.y-self.rect.height//2,self.rect.width*2,self.rect.height*2)
             display_rect(playerNear)
-            if playerNear.colliderect(sprites[0].rect):
+            if playerNear.colliderect(playerSprite.rect):
                 playerNear = True
                 if "playerNear" in self.animations and self.animation == self.animations["idle"][1]:
                     self.animation = self.animations["playerNear"][1]
@@ -272,13 +274,10 @@ class PlayerSprite(Sprite):
         self.lookFrame = 0
 
     def update(self,tick):
-        global newKeyboard, scroll, screenSize
+        global newKeyboard, scroll, screenSize, playerSprite
         player = self.extraArgs["player"]-1
-        if keyboard[player]["pause"]:
-            pause()
-        if newKeyboard[player]["reset"]:
-            reset()
-            return
+        if player == 1 and playerSprite != self:
+            playerSprite = self
         if not self.extraArgs["dead"] and not self.extraArgs["won"]:
             if keyboard[player]["up"]:
                 self.projected_direction = 0 if (0 != self.direction) else self.projected_direction
@@ -814,7 +813,10 @@ def display_rect(rect,colour=(255,0,0,100)):
     rectsToFill.append((rect,colour))
 
 def update(tick):
-    global play, newKeyboard, rectsToFill
+    global play, newKeyboard, rectsToFill, playerSprite
+
+    if playerSprite not in sprites:
+        playerSprite = None
 
     rectsToFill = []
 
@@ -833,6 +835,12 @@ def update(tick):
                 if event.key in binds[i]:
                     keyboard[i][binds[i][event.key]] = False
     
+    if keyboard[0]["pause"]:
+        pause()
+    if newKeyboard[0]["reset"]:
+        reset()
+        return
+
     if levelEdit and not play:
         if newKeyboard[0]["reset"]:
             levelData["level"]["keys"] -= 1
@@ -846,20 +854,27 @@ def update(tick):
             play = False
             reset()
 
-    if not sprites[0].extraArgs["dead"]:
-        [terrain.do_animation() for terrain in terrains if terrain.animation]
+    if playerSprite:
+        if not playerSprite.extraArgs["dead"]:
+            [terrain.do_animation() for terrain in terrains if terrain.animation]
     
-    for sprite in sprites[1:]: # SPRITES
-        if play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]):
+    for sprite in sprites: # SPRITES
+        if sprite == playerSprite:
+            continue
+        if play and not playerSprite:
+            sprite.update(tick)
+        elif play and not (playerSprite.extraArgs["dead"] or playerSprite.extraArgs["won"]):
             sprite.update(tick)
         scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
         screen.blit(sprite.image,scrollPos)
 
-    if (play and not (sprites[0].extraArgs["dead"] or sprites[0].extraArgs["won"]) and not frameN == 0):
+    if play and not playerSprite:
+        timer.update(tick)
+    elif (play and not (playerSprite.extraArgs["dead"] or playerSprite.extraArgs["won"]) and not frameN == 0):
         timer.update(tick)
 
-    if play:
-        sprites[0].update(tick)
+    if play and playerSprite:
+        playerSprite.update(tick)
 
     if levelEdit and not play:
         scroll[0] += 8 if keyboard[0]["right"] else -8 if keyboard[0]["left"] else 0
@@ -872,12 +887,15 @@ def update(tick):
 
     screen.blit(terrainSurface,(24-scroll[0],24-scroll[1]))
 
-    for sprite in sorted(sprites[1:]):
+    for sprite in sorted(sprites):
+        if sprite == playerSprite:
+            continue
         scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
         screen.blit(sprite.image,scrollPos)
 
-    scrollPos = (list(sprites[0].rect.topleft)[0]+24-scroll[0], list(sprites[0].rect.topleft)[1]+24-scroll[1])
-    screen.blit(sprites[0].image,scrollPos)
+    if playerSprite:
+        scrollPos = (list(playerSprite.rect.topleft)[0]+24-scroll[0], list(playerSprite.rect.topleft)[1]+24-scroll[1])
+        screen.blit(playerSprite.image,scrollPos)
 
     if levelEdit and not play:
         selectedIm,play = levelEdit.update(scroll)
@@ -888,8 +906,9 @@ def update(tick):
 
     screen.blit(hudSurface,(0,0))
 
-    if sprites[0].extraArgs["won"]:
-        font_render("arial60","Congratulations!",(70,70),(255,255,255))
+    if playerSprite:
+        if playerSprite.extraArgs["won"]:
+            font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
     if levelData['level']['keys']:
         font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,7),(25,25,25),antialiasing=False)
@@ -912,9 +931,9 @@ def update(tick):
     font_render("munro24",t,(1245,40),(200,8,8))
     font_render("munro24",t,(1243,38))
 
-    if debug and sprites[0].extraArgs["player"]:
-        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(sprites[0].rect.x)} y {add_zeros(sprites[0].rect.y)} dir {add_zeros(sprites[0].direction,0)} pro {add_zeros(sprites[0].projected_direction,0)} T {add_zeros(sprites[0].rect.top)} L {add_zeros(sprites[0].rect.left)} R {add_zeros(sprites[0].rect.right)} B {add_zeros(sprites[0].rect.bottom)} | s {add_zeros(sprites[0].fSpeed,1)} {add_zeros(sprites[0].speed[0],1)} {add_zeros(sprites[0].speed[1],1)} su {add_zeros(sprites[0].startup,1)} | Scroll: {scroll} | Ani: {add_zeros(sprites[0].animationFrame)} {sprites[0].animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
-        font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in sprites[0].extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
+    if debug and playerSprite:
+        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(playerSprite.rect.x)} y {add_zeros(playerSprite.rect.y)} dir {add_zeros(playerSprite.direction,0)} pro {add_zeros(playerSprite.projected_direction,0)} T {add_zeros(playerSprite.rect.top)} L {add_zeros(playerSprite.rect.left)} R {add_zeros(playerSprite.rect.right)} B {add_zeros(playerSprite.rect.bottom)} | s {add_zeros(playerSprite.fSpeed,1)} {add_zeros(playerSprite.speed[0],1)} {add_zeros(playerSprite.speed[1],1)} su {add_zeros(playerSprite.startup,1)} | Scroll: {scroll} | Ani: {add_zeros(playerSprite.animationFrame)} {playerSprite.animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
+        font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in playerSprite.extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
 
 def add_zeros(text,zeros=4):
     if text is None:
