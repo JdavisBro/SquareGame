@@ -5,6 +5,9 @@ import sys
 import random
 import copy
 
+import rich
+from rich import print
+
 # External
 import pygame
 import pygame.freetype
@@ -43,7 +46,7 @@ else:
 
 frameN = 1
 clock = pygame.time.Clock()
-playerSprite = None
+playerSprite = []
 
 def bind(value,upper,lower):
     if value > upper: return upper, True
@@ -136,7 +139,7 @@ class Sprite:
         self.weight = weight
         if self.extraArgs["player"] == 1:
             sprites.insert(0,self)
-            playerSprite = self
+            playerSprite.append(self)
         else:
             sprites.append(self)
         if levelEdit:
@@ -166,7 +169,7 @@ class Sprite:
         if not self.extraArgs["player"] and playerSprite:
             playerNear = pygame.Rect(self.rect.x-self.rect.width//2,self.rect.y-self.rect.height//2,self.rect.width*2,self.rect.height*2)
             display_rect(playerNear)
-            if playerNear.colliderect(playerSprite.rect):
+            if playerNear.collidelist(playerSprite):
                 playerNear = True
                 if "playerNear" in self.animations and self.animation == self.animations["idle"][1]:
                     self.animation = self.animations["playerNear"][1]
@@ -276,8 +279,8 @@ class PlayerSprite(Sprite):
     def update(self,tick):
         global newKeyboard, scroll, screenSize, playerSprite
         player = self.extraArgs["player"]-1
-        if player == 1 and playerSprite != self:
-            playerSprite = self
+        if player == 1 and self not in playerSprite:
+            playerSprite.append(self)
         if not self.extraArgs["dead"] and not self.extraArgs["won"]:
             if keyboard[player]["up"]:
                 self.projected_direction = 0 if (0 != self.direction) else self.projected_direction
@@ -296,7 +299,7 @@ class PlayerSprite(Sprite):
                 if (keyboard[player]["action"] or userPrefs["automaticMovement"] == 1) and (self.direction is not None and frameN != 0):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
                     def sprite_movement_check(s):
-                        return not any((s == self, not s.extraArgs["tangable"], s.extraArgs["key"], (s.extraArgs["goal"] and not s.extraArgs["locked"]), s.extraArgs["movable"]))
+                        return not any((s == self, not s.extraArgs["tangable"], s.extraArgs["key"], (s.extraArgs["goal"] and not s.extraArgs["locked"]), s.extraArgs["movable"], s.extraArgs["playerThrough"]))
                     rects = [s.rect for s in sprites if sprite_movement_check(s)] + [t.rect for t in terrains]
                     collides = movedRect.collidelistall(rects)
                     if (terrainSurface.get_rect().contains(movedRect)) and not collides:
@@ -359,7 +362,7 @@ class PlayerSprite(Sprite):
 
     def collisions(self,binds):
         global collectedKeys
-        spritesNoMe = [sprite for sprite in sprites if sprite != self and ((sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"]) or sprite.extraArgs["triggerId"])]
+        spritesNoMe = [sprite for sprite in sprites if sprite != self and ((sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"]) or sprite.extraArgs["triggerId"]) and not sprite.extraArgs["playerThrough"]]
         rects = [sprite.rect for sprite in spritesNoMe]
         collides = self.rect.collidelistall(rects)
         if collides:
@@ -590,7 +593,7 @@ class Timer():
             self.started = 1
 
     def print_time(self):
-        print(f"Time on level {self.level}: {self.time_readable(self.levelTime)}")
+        print(f"Time on [bold cyan]Level {self.level}[/bold cyan]: {self.time_readable(self.levelTime)}")
 
     def time_readable(self,time,hours=True,milliseconds=True):
         """Returns time (ms) as a readable string of "HH:MM:SS.MS"."""
@@ -640,7 +643,7 @@ def start():
         if goMainMenu:
             levels = list(list(os.walk("levels"))[0][2])
             levels = [f[:-5] for f in levels if f.endswith(".json")]
-            dropSelect.update_items([(level,level) for level in levels])
+            dropSelect.update_items([(level.replace("[q]","?"),level) for level in levels])
             dropSelect.make_selection_drop()
             return
         if pauseMenu.is_enabled():
@@ -815,8 +818,7 @@ def display_rect(rect,colour=(255,0,0,100)):
 def update(tick):
     global play, newKeyboard, rectsToFill, playerSprite
 
-    if playerSprite not in sprites:
-        playerSprite = None
+    [playerSprite.remove(sprite) for sprite in playerSprite if sprite not in sprites]
 
     rectsToFill = []
 
@@ -826,6 +828,13 @@ def update(tick):
         if event.type == pygame.QUIT: close()
         if event.type == pygame.KEYDOWN: # KEY
             timer.start()
+            if event.key == pygame.K_i and debug:
+                mouserect = pygame.Rect((pygame.mouse.get_pos(),(1,1)))
+                mouserect.topleft = (mouserect.x-24,mouserect.y-24)
+                guys = sprites + terrains
+                col = mouserect.collidelist(guys)
+                if col != -1:
+                    rich.inspect(guys[col])
             for i in range(len(binds)):
                 if event.key in binds[i]:
                     newKeyboard[i][binds[i][event.key]] = True
@@ -855,26 +864,31 @@ def update(tick):
             reset()
 
     if playerSprite:
-        if not playerSprite.extraArgs["dead"]:
-            [terrain.do_animation() for terrain in terrains if terrain.animation]
-    
+        playerDead = any([(sprite.extraArgs["dead"] or sprite.extraArgs["won"]) for sprite in playerSprite])
+    else:
+        playerDead = True
+
+    if not playerDead:
+        [terrain.do_animation() for terrain in terrains if terrain.animation]
+
     for sprite in sprites: # SPRITES
-        if sprite == playerSprite:
+        if sprite in playerSprite:
             continue
         if play and not playerSprite:
             sprite.update(tick)
-        elif play and not (playerSprite.extraArgs["dead"] or playerSprite.extraArgs["won"]):
+        elif play and not playerDead:
             sprite.update(tick)
         scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
         screen.blit(sprite.image,scrollPos)
 
     if play and not playerSprite:
         timer.update(tick)
-    elif (play and not (playerSprite.extraArgs["dead"] or playerSprite.extraArgs["won"]) and not frameN == 0):
+    elif (play and not (playerDead and not frameN == 0)):
         timer.update(tick)
 
     if play and playerSprite:
-        playerSprite.update(tick)
+        for sprite in playerSprite:
+            sprite.update(tick)
 
     if levelEdit and not play:
         scroll[0] += 8 if keyboard[0]["right"] else -8 if keyboard[0]["left"] else 0
@@ -893,9 +907,9 @@ def update(tick):
         scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
         screen.blit(sprite.image,scrollPos)
 
-    if playerSprite:
-        scrollPos = (list(playerSprite.rect.topleft)[0]+24-scroll[0], list(playerSprite.rect.topleft)[1]+24-scroll[1])
-        screen.blit(playerSprite.image,scrollPos)
+    for sprite in playerSprite:
+        scrollPos = (list(sprite.rect.topleft)[0]+24-scroll[0], list(sprite.rect.topleft)[1]+24-scroll[1])
+        screen.blit(sprite.image,scrollPos)
 
     if levelEdit and not play:
         selectedIm,play = levelEdit.update(scroll)
@@ -907,7 +921,7 @@ def update(tick):
     screen.blit(hudSurface,(0,0))
 
     if playerSprite:
-        if playerSprite.extraArgs["won"]:
+        if any([sprite.extraArgs["won"] for sprite in playerSprite]):
             font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
     if levelData['level']['keys']:
@@ -932,8 +946,8 @@ def update(tick):
     font_render("munro24",t,(1243,38))
 
     if debug and playerSprite:
-        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(playerSprite.rect.x)} y {add_zeros(playerSprite.rect.y)} dir {add_zeros(playerSprite.direction,0)} pro {add_zeros(playerSprite.projected_direction,0)} T {add_zeros(playerSprite.rect.top)} L {add_zeros(playerSprite.rect.left)} R {add_zeros(playerSprite.rect.right)} B {add_zeros(playerSprite.rect.bottom)} | s {add_zeros(playerSprite.fSpeed,1)} {add_zeros(playerSprite.speed[0],1)} {add_zeros(playerSprite.speed[1],1)} su {add_zeros(playerSprite.startup,1)} | Scroll: {scroll} | Ani: {add_zeros(playerSprite.animationFrame)} {playerSprite.animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
-        font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in playerSprite.extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
+        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(playerSprite[0].rect.x)} y {add_zeros(playerSprite[0].rect.y)} dir {add_zeros(playerSprite[0].direction,0)} pro {add_zeros(playerSprite[0].projected_direction,0)} T {add_zeros(playerSprite[0].rect.top)} L {add_zeros(playerSprite[0].rect.left)} R {add_zeros(playerSprite[0].rect.right)} B {add_zeros(playerSprite[0].rect.bottom)} | s {add_zeros(playerSprite[0].fSpeed,1)} {add_zeros(playerSprite[0].speed[0],1)} {add_zeros(playerSprite[0].speed[1],1)} su {add_zeros(playerSprite[0].startup,1)} | Scroll: {scroll} | Ani: {add_zeros(playerSprite[0].animationFrame)} {playerSprite[0].animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
+        font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in playerSprite[0].extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
 
 def add_zeros(text,zeros=4):
     if text is None:
@@ -957,9 +971,9 @@ pauseMenu.disable()
 
 levelName = None
 
-def select_level(selectedlevel, *args, **kwargs):
+def select_level(a, selectedLevel, *args, **kwargs):
     global levelName
-    levelName = selectedlevel[0][0]
+    levelName = selectedLevel
 
 if not os.path.exists(prefsPath): # userPrefs and preferences menu
     with open("defaultUserPrefs.json","r") as f2:
@@ -1082,7 +1096,7 @@ menu.add.vertical_margin(20)
 levels = list(list(os.walk("levels"))[0][2])
 levels = [f[:-5] for f in levels if f.endswith(".json")]
 levelName = levels[0]
-dropSelect = menu.add.dropselect("Level", [(f,f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
+dropSelect = menu.add.dropselect("Level", [(f.replace("[q]","?"),f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
 for i in [('Preferences',preferencesMenu),('Quit Game', close)]:
     menu.add.vertical_margin(20)
     menu.add.button(*i)

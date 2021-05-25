@@ -1,10 +1,16 @@
 {
     "level": {
-        "border": "brick",
-        "background":  ["brick0","brick1","brick2","brick3","brick4"],
+        "border": "grass",
+        "background": [
+            "grass0",
+            "grass1",
+            "grass2",
+            "grass3",
+            "grass4"
+        ],
         "size": [
-            40,
-            22
+            400,
+            110
         ],
         "keys": 0
     },

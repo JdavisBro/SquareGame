@@ -47,6 +47,10 @@ images = {
     "default": {
         "idle": "idle.png"
     },
+    "playerGate": {
+        "idle": "horizontal.png",
+        "vertical": "vertical.png"
+    },
     "grass": {
         0: "0.png",
     },
@@ -86,7 +90,7 @@ binds = [
     {pygame.K_UP:"up",pygame.K_DOWN:"down",pygame.K_LEFT:"left",pygame.K_RIGHT:"right",pygame.K_KP0:"action"}
     ]
 
-sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle","assets/stone/":"stone"}
+sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle","assets/stone/":"stone","assets/playerGate/":"playerGate"}
 
 terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick","assets/terrain/phantombrick/": "phantombrick"}
 
@@ -118,7 +122,8 @@ spriteExtraArgs = {
     "pathRepeat": ["toggle",1],
     "pathTrigger": ["text",None],
     "addControl": ["text",None],
-    "triggerId": ["text",None]
+    "triggerId": ["text",None],
+    "playerThrough": ["toggle",0]
 }
 
 defaultExtraArgs = {
@@ -127,9 +132,5 @@ defaultExtraArgs = {
     "key":False,"goal":False,"locked":False,
     "won":False,"path":None,"pathSpeed":1,
     "pathStartup":1,"pathCooldown": 60,"pathRepeat":True,
-    "pathTrigger": None,"addControl": None,"triggerId": None
+    "pathTrigger": None,"addControl": None,"triggerId": None,"playerThrough":False
 } # Default Args
-
-sfxMap = {
-    "default": "hit"
-}

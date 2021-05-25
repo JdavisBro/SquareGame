@@ -85,20 +85,20 @@ class LevelEditor():
                             self.images[terrain][self.selectedN] = pygame.transform.scale(self.images[terrain][self.selectedN],(32,32))
                         self.editSurface.blit(self.images[terrain][self.selectedN],self.levelEditAssets[self.selected])
                         self.previousMouse = mouse
+                        self.prevGridPos = [-1,-1]
             else: # Didn't click an asset, could've clicked a grid spot
                 mouseRect.topleft = (mouseRect.x-24+scroll[0],mouseRect.y-24+scroll[1])
                 if not (bind(mouseRect.x,self.size[0],0)[1] or bind(mouseRect.y,self.size[1],0)[1]): # WE ON DA GRID
                     gridPos = []
                     gridPos.append(mouseRect.x // 64)
                     gridPos.append(mouseRect.y // 64)
-                    notPrev = gridPos != self.prevGridPos
-                    self.prevGridPos = gridPos.copy()
                     gridPos[0] = gridPos[0]*64
                     gridPos[1] = gridPos[1]*64
                     if mouse[0]: # Ayo we left clicked on the  grid
-                        if notPrev and self.posMode:
+                        if gridPos != self.prevGridPos and self.posMode:
                             return self.set_pos(gridPos)
-                        if notPrev and self.selected:
+                        if gridPos != self.prevGridPos and self.selected:
+                            self.prevGridPos = gridPos.copy()
                             if (str(gridPos) in self.editCoords):
                                 if [terrain for terrain in self.terrains if [terrain.rect.x,terrain.rect.y] == gridPos]:
                                     self.terrainSurface.fill((0,0,0,0),self.editCoords[str(gridPos)][0].rect)
@@ -290,6 +290,11 @@ class LevelEditor():
     def edit_menu(self):
         while 1:
             try:
+                if pygame.key.get_pressed()[pygame.K_TAB]:
+                    self.update_sprite()
+                    self.editMenu.disable()
+                if pygame.key.get_pressed()[pygame.K_ESCAPE]:
+                    self.editMenu.disable()
                 self.editMenu.update(pygame.event.get())
             except:
                 self.update_sprite()
