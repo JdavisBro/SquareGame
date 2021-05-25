@@ -169,7 +169,7 @@ class Sprite:
         if not self.extraArgs["player"] and playerSprite:
             playerNear = pygame.Rect(self.rect.x-self.rect.width//2,self.rect.y-self.rect.height//2,self.rect.width*2,self.rect.height*2)
             display_rect(playerNear)
-            if playerNear.collidelist(playerSprite):
+            if playerNear.collidelist(playerSprite) != -1:
                 playerNear = True
                 if "playerNear" in self.animations and self.animation == self.animations["idle"][1]:
                     self.animation = self.animations["playerNear"][1]
@@ -918,6 +918,16 @@ def update(tick):
         if selectedIm[1].topleft != (0,0):
             screen.blit(selectedIm[0],selectedIm[1])
 
+    if pygame.Rect(1200,4,1328,60).collidelist(playerSprite) != -1:
+        alpha = hudSurface.get_alpha()
+        alpha = hudSurface.get_alpha() - 5 if alpha - 5 > 100 else 100
+        hudSurface.set_alpha(alpha)
+    else:
+        alpha = hudSurface.get_alpha()
+        alpha = alpha + 5 if alpha + 5 < 255 else 255
+        hudSurface.set_alpha(alpha)
+
+
     screen.blit(hudSurface,(0,0))
 
     if playerSprite:
@@ -925,7 +935,7 @@ def update(tick):
             font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
     if levelData['level']['keys']:
-        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,7),(25,25,25),antialiasing=False)
+        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,7),(25,25,25,alpha),antialiasing=False)
 
     if levelEdit:
         font_render("munro24",str(levelEdit.mousePos),(90,0))
@@ -939,11 +949,11 @@ def update(tick):
                 surface.fill(i[1],i[0],pygame.BLEND_RGBA_ADD)
             screen.blit(surface,(24,24))
     t = timer.time_readable(timer.time)
-    font_render("munro24",t,(1216,10),(8,8,200))
-    font_render("munro24",t,(1214,8))
+    font_render("munro24",t,(1216,10),(8,8,200,alpha))
+    font_render("munro24",t,(1214,8),(255,255,255,alpha))
     t = timer.time_readable(timer.levelTime,False)
-    font_render("munro24",t,(1245,40),(200,8,8))
-    font_render("munro24",t,(1243,38))
+    font_render("munro24",t,(1245,40),(200,8,8,alpha))
+    font_render("munro24",t,(1243,38),(255,255,255,alpha))
 
     if debug and playerSprite:
         font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(playerSprite[0].rect.x)} y {add_zeros(playerSprite[0].rect.y)} dir {add_zeros(playerSprite[0].direction,0)} pro {add_zeros(playerSprite[0].projected_direction,0)} T {add_zeros(playerSprite[0].rect.top)} L {add_zeros(playerSprite[0].rect.left)} R {add_zeros(playerSprite[0].rect.right)} B {add_zeros(playerSprite[0].rect.bottom)} | s {add_zeros(playerSprite[0].fSpeed,1)} {add_zeros(playerSprite[0].speed[0],1)} {add_zeros(playerSprite[0].speed[1],1)} su {add_zeros(playerSprite[0].startup,1)} | Scroll: {scroll} | Ani: {add_zeros(playerSprite[0].animationFrame)} {playerSprite[0].animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
