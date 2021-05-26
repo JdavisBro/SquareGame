@@ -452,7 +452,7 @@ class PathSprite(Sprite):
         self.pathCooldown = self.extraArgs["pathCooldown"]
         self.moving = None
         self.done = False
-        if self.extraArgs["path"] is None:
+        if not self.extraArgs["path"]:
             self.extraArgs["path"] = [self.rect.topleft]
 
     def update(self,tick):
@@ -512,11 +512,12 @@ class PathSprite(Sprite):
                 if not move[0] and not move[1]:
                     if self.pathIndex == 0 and self.pathIndexDir == 1:
                         self.pathIndexDir = 0
-                    elif self.pathIndex == len(self.extraArgs["path"])-1 and self.pathIndexDir == 0:
+                    elif self.pathIndex >= len(self.extraArgs["path"])-1 and self.pathIndexDir == 0:
                         self.done = True
                         self.pathIndexDir = 1
                     self.startup = self.extraArgs["pathStartup"]
-                    self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
+                    if len(self.extraArgs["path"]) != 1:
+                        self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
                     self.pathCooldown = self.extraArgs["pathCooldown"]
                     self.set_animation("idle")
                 self.startupImmunity -= 1 if self.startupImmunity > 0 else 0
@@ -918,15 +919,12 @@ def update(tick):
         if selectedIm[1].topleft != (0,0):
             screen.blit(selectedIm[0],selectedIm[1])
 
+    alpha = hudSurface.get_alpha()
     if pygame.Rect(1200,4,1328,60).collidelist(playerSprite) != -1:
-        alpha = hudSurface.get_alpha()
-        alpha = hudSurface.get_alpha() - 5 if alpha - 5 > 100 else 100
-        hudSurface.set_alpha(alpha)
+        alpha = alpha - tick//2 if alpha - tick//2 > 50 else 50
     else:
-        alpha = hudSurface.get_alpha()
-        alpha = alpha + 5 if alpha + 5 < 255 else 255
-        hudSurface.set_alpha(alpha)
-
+        alpha = alpha + tick//2 if alpha + tick//2 < 255 else 255
+    hudSurface.set_alpha(alpha)
 
     screen.blit(hudSurface,(0,0))
 
