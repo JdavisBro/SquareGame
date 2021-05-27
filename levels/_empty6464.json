@@ -1,0 +1,29 @@
+{
+    "level": {
+        "border": "grass",
+        "background":  ["grass0","grass1","grass2","grass3","grass4"],
+        "size": [
+            20,
+            11
+        ],
+        "keys": 0
+    },
+    "sprites": [
+        {
+            "image": "idle",
+            "assetPath": "assets/guy/",
+            "animations": "player",
+            "pos": [
+                64,
+                64
+            ],
+            "type": "player",
+            "extraImages": "player",
+            "extraArgs": {
+                "player": 1,
+                "killable": true
+            }
+        }
+    ],
+    "terrain": []
+}

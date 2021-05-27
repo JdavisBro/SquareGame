@@ -1,0 +1,873 @@
+{
+    "level": {
+        "border": "grass",
+        "background": [
+            "grass0",
+            "grass1",
+            "grass2",
+            "grass3",
+            "grass4"
+        ],
+        "size": [
+            20,
+            11
+        ],
+        "keys": 0
+    },
+    "sprites": [
+        {
+            "image": "idle",
+            "assetPath": "assets/guy/",
+            "animations": "player",
+            "pos": [
+                64,
+                64
+            ],
+            "type": "player",
+            "extraImages": "player",
+            "extraArgs": {
+                "player": 1,
+                "killable": true
+            }
+        },
+        {
+            "image": "idle",
+            "extraImages": "goal",
+            "assetPath": "assets/goal/",
+            "pos": [
+                1216,
+                64
+            ],
+            "extraArgs": {
+                "key": false,
+                "goal": true
+            }
+        }
+    ],
+    "terrain": [
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                0,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                128,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                512
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                64,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                128,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                256,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                320,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                448,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                512,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                640,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                768,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                896,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1024,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                512
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                64
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1152,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                256,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                320,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                448,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                192,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                256,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                320,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                512,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                448,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                64
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                320,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                320,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                384,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                448,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                448,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                512,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                512,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                64
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                704,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                256,
+                512
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                576,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                512
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                64
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                832,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                64
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                896,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                192
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                256
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1024,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1088,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                1024,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/nada/",
+            "pos": [
+                960,
+                448
+            ]
+        }
+    ]
+}

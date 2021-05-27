@@ -53,17 +53,16 @@ def bind(value,upper,lower):
     if value < lower: return lower, True
     return value, False
 
-def bind_rect_to_screen(rect):
-    binds = []
+def bind_rect_to_screen(rect,bindeds=[]):
     rect.top,binded = bind(rect.top,size[1],0)
-    binds.append(binded)
+    if binded: bindeds.append(binded)
     rect.left,binded = bind(rect.left,size[0],0)
-    binds.append(binded)
+    if binded: bindeds.append(binded)
     rect.bottom,binded = bind(rect.bottom,size[1],0)
-    binds.append(binded)
+    if binded: bindeds.append(binded)
     rect.right,binded = bind(rect.right,size[0],0)
-    binds.append(binded)
-    return rect,binds
+    if binded: bindeds.append(binded)
+    return rect,bindeds
 
 class Terrain:
     def __init__(self,image,pos=[0,0],assetPath="assets/terrain/",material="none",scale=4,animation=None,animations=None):
@@ -158,8 +157,8 @@ class Sprite:
                 self.extraArgs["locked"] = False
         self.do_animations()
 
-    def collisions(self,binds):
-        return binds
+    def collisions(self,binded):
+        return binded
 
     def do_animations(self):
         global goMainMenu,levelChange,levelName
@@ -278,6 +277,7 @@ class PlayerSprite(Sprite):
 
     def update(self,tick):
         global newKeyboard, scroll, screenSize, playerSprite
+        binded = []
         player = self.extraArgs["player"]-1
         if player == 1 and self not in playerSprite:
             playerSprite.append(self)
@@ -299,7 +299,7 @@ class PlayerSprite(Sprite):
                 if (keyboard[player]["action"] or userPrefs["automaticMovement"] == 1) and (self.direction is not None and frameN != 0):
                     movedRect = self.rect.move([1 if self.direction == 1 else -1 if self.direction == 3 else 0,1 if self.direction == 2 else -1 if self.direction == 0 else 0])
                     def sprite_movement_check(s):
-                        return not any((s == self, not s.extraArgs["tangable"], s.extraArgs["key"], (s.extraArgs["goal"] and not s.extraArgs["locked"]), s.extraArgs["movable"], s.extraArgs["playerThrough"]))
+                        return not any((s == self, not s.extraArgs["tangable"], s.extraArgs["key"], (s.extraArgs["goal"] and not s.extraArgs["locked"]), s.extraArgs["movable"], s.extraArgs["playerThrough"], s.extraArgs["triggerId"]))
                     rects = [s.rect for s in sprites if sprite_movement_check(s)] + [t.rect for t in terrains]
                     collides = movedRect.collidelistall(rects)
                     if (terrainSurface.get_rect().contains(movedRect)) and not collides:
@@ -324,9 +324,9 @@ class PlayerSprite(Sprite):
                 elif self.direction == 3: #left
                     self.speed[0] = round((self.speed[0] - accel/self.startup) if (self.speed[0]>self.fSpeed*-1) else self.fSpeed*-1,2)
             self.rect = self.rect.move([round(self.speed[0]),round(self.speed[1])])
-            self.rect,binds = bind_rect_to_screen(self.rect) 
-            binds = self.collisions(binds)
-            if any(binds):
+            self.rect,binded = bind_rect_to_screen(self.rect,binded)
+            binded = self.collisions(binded)
+            if any(binded):
                 self.speed = [0,0]
                 self.fSpeed = 0
                 self.direction = None
@@ -360,7 +360,7 @@ class PlayerSprite(Sprite):
         scroll[1] = bind(scroll[1],size[1]+48-screenSize[1],0)[0]
         super().update(tick)
 
-    def collisions(self,binds):
+    def collisions(self,binded):
         global collectedKeys
         spritesNoMe = [sprite for sprite in sprites if sprite != self and ((sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"]) or sprite.extraArgs["triggerId"]) and not sprite.extraArgs["playerThrough"]]
         rects = [sprite.rect for sprite in spritesNoMe]
@@ -368,6 +368,8 @@ class PlayerSprite(Sprite):
         if collides:
             for collision in collides:
                 if spritesNoMe[collision].extraArgs["triggerId"]:
+                    if "press" in spritesNoMe[collision].animations:
+                        spritesNoMe[collision].set_animation("press")
                     triggers[spritesNoMe[collision].extraArgs["triggerId"]] = True
                     continue
                 if (spritesNoMe[collision].extraArgs["goal"] and not spritesNoMe[collision].extraArgs["locked"]):
@@ -394,7 +396,7 @@ class PlayerSprite(Sprite):
                         tempRect.right = self.rect.left
                     r = [terrain.rect for terrain in terrains] + [sprite.rect for sprite in sprites if sprite.extraArgs["tangable"] and (sprite != self and sprite != spritesNoMe[collision])]
                     col = tempRect.collidelist(r)
-                    tempRect,moveBinds = bind_rect_to_screen(tempRect)
+                    tempRect,moveBinds = bind_rect_to_screen(tempRect,[])
                     if any(moveBinds):
                         stop = True
                     elif col != -1:
@@ -412,7 +414,7 @@ class PlayerSprite(Sprite):
                             self.fSpeed = self.fSpeed//8
                     spritesNoMe[collision].rect = tempRect
                 if (self.fSpeed and not spritesNoMe[collision].extraArgs["movable"]) or stop:
-                    binds.append(True)
+                    binded.append(True)
                     if self.direction == 0: #up
                         self.rect.top = spritesNoMe[collision].rect.bottom
                     elif self.direction == 1: #right
@@ -428,7 +430,7 @@ class PlayerSprite(Sprite):
         collides = self.rect.collidelistall(rects)
         if collides:
             for collision in collides:
-                binds.append(True)
+                binded.append(True)
                 if self.direction == 0: #up
                     self.rect.top = terrains[collision].rect.bottom
                 elif self.direction == 1: #right
@@ -437,7 +439,7 @@ class PlayerSprite(Sprite):
                     self.rect.bottom = terrains[collision].rect.top
                 elif self.direction == 3: #left
                     self.rect.left = terrains[collision].rect.right
-        return binds
+        return binded
 
 class PathSprite(Sprite):
     def __init__(self,image,pos=[0,0],assetPath="assets/",scale=4,
@@ -456,14 +458,16 @@ class PathSprite(Sprite):
             self.extraArgs["path"] = [self.rect.topleft]
 
     def update(self,tick):
+        binded = []
         if not self.extraArgs["dead"] and (((not self.extraArgs["pathRepeat"] and not self.done) or self.extraArgs["pathRepeat"])):
             if self.pathCooldown:
                 self.pathCooldown -= 1
             else:
                 if self.extraArgs["pathTrigger"]:
-                    if not triggers[self.extraArgs["pathTrigger"]]:
-                        super().update()
-                        return
+                    if self.extraArgs["pathTrigger"] in triggers:
+                        if not triggers[self.extraArgs["pathTrigger"]]:
+                            super().update(tick)
+                            return
                 pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
                 if self.startupImmunity == 0:
                     movement = self.extraArgs["pathSpeed"]/self.startup*tick
@@ -530,8 +534,7 @@ class PathSprite(Sprite):
 
     def collisions(self,move):
         spritesNoMe = [sprite for sprite in sprites if sprite != self and (sprite.extraArgs["tangable"] and not sprite.extraArgs["dead"])]
-        rects = [sprite.rect for sprite in spritesNoMe]
-        collides = self.rect.collidelistall(rects)
+        collides = self.rect.collidelistall([sprite.rect for sprite in spritesNoMe])
         if collides:
             for collision in collides:
                 if self.extraArgs["goal"] and spritesNoMe[collision].extraArgs["player"]:
@@ -539,29 +542,21 @@ class PathSprite(Sprite):
                 if self.extraArgs["kill"] and spritesNoMe[collision].extraArgs["killable"]:
                     spritesNoMe[collision].kill()
                     return
-                if isinstance(spritesNoMe[collision],PlayerSprite) and not spritesNoMe[collision].extraArgs["dead"]:
+                if (isinstance(spritesNoMe[collision],PlayerSprite) or spritesNoMe[collision].extraArgs["movable"]) and not spritesNoMe[collision].extraArgs["dead"]:
                     if ((move[0] if move[0] > 0 else move[0]*-1) > (move[1] if move[1] > 0 else move[1]*-1)):
                         if move[0] >= 0:
-                            rects[collision].left = self.rect.right
+                            spritesNoMe[collision].rect.left = self.rect.right
                         else:
-                            rects[collision].right = self.rect.left
+                            spritesNoMe[collision].rect.right = self.rect.left
                     else:
                         if move[1] >= 0:
-                            rects[collision].top = self.rect.bottom
+                            spritesNoMe[collision].rect.top = self.rect.bottom
                         else:
-                            rects[collision].bottom = self.rect.top
-                    binds = []
-                    rects[collision].top,binded = bind(rects[collision].top,size[1],0)
-                    binds.append(binded)
-                    rects[collision].left,binded = bind(rects[collision].left,size[0],0)
-                    binds.append(binded)
-                    rects[collision].bottom,binded = bind(rects[collision].bottom,size[1],0)
-                    binds.append(binded)
-                    rects[collision].right,binded = bind(rects[collision].right,size[0],0)
-                    binds.append(binded)
-                    if rects[collision].collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([not s.extraArgs["dead"],s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
-                        binds.append(True)
-                    if any(binds):
+                            spritesNoMe[collision].rect.bottom = self.rect.top
+                    spritesNoMe[collision].rect,binded = bind_rect_to_screen(spritesNoMe[collision].rect,[])
+                    if spritesNoMe[collision].rect.collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([not s.extraArgs["dead"],s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
+                        binded.append(True)
+                    if any(binded):
                         spritesNoMe[collision].kill()
 
 class Timer():
@@ -1102,9 +1097,9 @@ menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.th
 menu.add.button('Play Game', start)
 menu.add.vertical_margin(20)
 levels = list(list(os.walk("levels"))[0][2])
-levels = [f[:-5] for f in levels if f.endswith(".json")]
+levels = [f[:-5] for f in levels if f.endswith(".json") and (not f.startswith("_") or debug)]
 levelName = levels[0]
-dropSelect = menu.add.dropselect("Level", [(f.replace("[q]","?"),f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=500,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
+dropSelect = menu.add.dropselect("Level", [(f.replace("[q]","?"),f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=8,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
 for i in [('Preferences',preferencesMenu),('Quit Game', close)]:
     menu.add.vertical_margin(20)
     menu.add.button(*i)

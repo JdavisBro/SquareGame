@@ -42,7 +42,12 @@ images = {
         "space": "space.png"
     },
     "stone": {
-        "idle": "idle.png"
+        "idle": "idle.png",
+        "death0": "death0.png","death1": "death1.png","death2":"death2.png","death3":"death3.png","death4":"death4.png"
+    },
+    "button": {
+        "idle": "idle.png",
+        "pressed": "pressed.png"
     },
     "default": {
         "idle": "idle.png"
@@ -58,6 +63,9 @@ images = {
         0: "0.png"
     },
     "phantombrick": {
+        0: "0.png"
+    },
+    "nada": {
         0: "0.png"
     },
 }
@@ -81,7 +89,14 @@ animations = {
     "triangle": {
         "idle": (60,["idle","idle1","idle2","idle3"],[]),
         "playerNear": (60,["mouthOpen","mouthOpen1","mouthOpen2","mouthOpen3"],[])
-    }
+    },
+    "stone": {
+        "idle": (0,["idle"],[]),
+        "death": (0,["death0","death1","death2","death3","death4"],[])
+    },
+    "button": {
+        "press": (0,["pressed"],[])
+    },
 
 }
 
@@ -90,9 +105,9 @@ binds = [
     {pygame.K_UP:"up",pygame.K_DOWN:"down",pygame.K_LEFT:"left",pygame.K_RIGHT:"right",pygame.K_KP0:"action"}
     ]
 
-sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle","assets/stone/":"stone","assets/playerGate/":"playerGate"}
+sprites = {"assets/guy/": "player", "assets/guy2/": "redPlayer", "assets/goal/":"goal","assets/key/":"key","assets/buttons/":"buttons","assets/triangle/":"triangle","assets/stone/":"stone","assets/playerGate/":"playerGate","assets/button/":"button"}
 
-terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick","assets/terrain/phantombrick/": "phantombrick"}
+terrains = {"assets/terrain/grass/": "grass","assets/terrain/brick/": "brick","assets/terrain/phantombrick/": "phantombrick","assets/terrain/nada/":"nada"}
 
 types = ["none","path","player"]
 

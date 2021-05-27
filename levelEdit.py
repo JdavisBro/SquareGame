@@ -64,9 +64,9 @@ class LevelEditor():
                     if list(self.levelEditAssets.keys())[clicked] == "save":
                         if not self.previousMouse[0]:
                             outN = 0
-                            while os.path.exists(f"levels/out{str(outN)}.json"):
+                            while os.path.exists(f"levels/_out{str(outN)}.json"):
                                 outN += 1
-                            with open(f"levels/out{str(outN)}.json","w+") as f:
+                            with open(f"levels/_out{str(outN)}.json","w+") as f:
                                 json.dump(self.levelData,f,indent=4)
                         self.previousMouse = mouse
                         return self.selectedIm,False
@@ -96,6 +96,7 @@ class LevelEditor():
                     gridPos[1] = gridPos[1]*64
                     if mouse[0]: # Ayo we left clicked on the  grid
                         if gridPos != self.prevGridPos and self.posMode:
+                            self.prevGridPos = gridPos.copy()
                             return self.set_pos(gridPos)
                         if gridPos != self.prevGridPos and self.selected:
                             self.prevGridPos = gridPos.copy()
