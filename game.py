@@ -554,7 +554,7 @@ class PathSprite(Sprite):
                         else:
                             spritesNoMe[collision].rect.bottom = self.rect.top
                     spritesNoMe[collision].rect,binded = bind_rect_to_screen(spritesNoMe[collision].rect,[])
-                    if spritesNoMe[collision].rect.collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([not s.extraArgs["dead"],s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], s != self, s != spritesNoMe[collision]])]):
+                    if spritesNoMe[collision].rect.collidelistall([t.rect for t in terrains] + [s.rect for s in sprites if all([not s.extraArgs["dead"],s.extraArgs["tangable"],not (s.extraArgs["goal"] and not s.extraArgs["locked"]),not s.extraArgs["key"], not s.extraArgs["triggerId"], s != self, s != spritesNoMe[collision]])]):
                         binded.append(True)
                     if any(binded):
                         spritesNoMe[collision].kill()
@@ -635,10 +635,12 @@ def start():
     levelChange = False
     while 1:
         if pauseMenu.is_enabled():
+            if pauseMenu.get_widgets()[0].get_title() != levelName:
+                pauseMenu.get_widgets()[0].set_title(levelName)
             pauseMenu.update(pygame.event.get())
         if goMainMenu:
             levels = list(list(os.walk("levels"))[0][2])
-            levels = [f[:-5] for f in levels if f.endswith(".json")]
+            levels = [f[:-5] for f in levels if f.endswith(".json") and (not f.startswith("_") or debug)]
             dropSelect.update_items([(level.replace("[q]","?"),level) for level in levels])
             dropSelect.make_selection_drop()
             return
@@ -657,7 +659,7 @@ def start():
 def pause():
     pygame.mouse.set_visible(True)
     keyboard[0]["pause"] = False
-    pauseMenu.get_current().select_widget(pauseMenu.get_widgets()[0])
+    pauseMenu.get_current().select_widget(pauseMenu.get_widgets()[2])
     pauseMenu.get_current().enable()
 
 def unpause():
@@ -969,6 +971,8 @@ for f in [("arial60","arial",60),("consolas10","consolas",10)]: # May be exclusi
     fonts[f[0]] = pygame.freetype.SysFont(f[1],f[2])
 
 pauseMenu = pygame_menu.Menu('Paused.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # PAUSE MENU
+pauseMenu.add.label("Level Name...")
+pauseMenu.add.vertical_margin(40)
 [pauseMenu.add.button(*i) for i in [('Continue',unpause),('Reset Level',reset),('Main Menu',returnToMainMenu),('Quit Game',close)]]
 pauseMenu.disable()
 

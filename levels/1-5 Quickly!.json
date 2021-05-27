@@ -35,117 +35,6 @@
             "extraImages": "triangle",
             "assetPath": "assets/triangle/",
             "pos": [
-                448,
-                64
-            ],
-            "extraArgs": {
-                "path": [
-                    [
-                        448,
-                        64
-                    ],
-                    [
-                        448,
-                        0
-                    ]
-                ],
-                "pathCooldown": 80.0,
-                "pathSpeed": 2.0,
-                "kill": true
-            },
-            "type": "path",
-            "animations": "triangle"
-        },
-        {
-            "image": "idle",
-            "extraImages": "triangle",
-            "assetPath": "assets/triangle/",
-            "pos": [
-                960,
-                64
-            ],
-            "extraArgs": {
-                "path": [
-                    [
-                        960,
-                        64
-                    ],
-                    [
-                        960,
-                        0
-                    ]
-                ],
-                "pathCooldown": 80.0,
-                "kill": true,
-                "pathSpeed": 2.0
-            },
-            "type": "path",
-            "animations": "triangle"
-        },
-        {
-            "image": "idle",
-            "extraImages": "triangle",
-            "assetPath": "assets/triangle/",
-            "pos": [
-                1088,
-                64
-            ],
-            "extraArgs": {
-                "path": [
-                    [
-                        1088,
-                        64
-                    ],
-                    [
-                        1088,
-                        0
-                    ]
-                ],
-                "pathCooldown": 80.0,
-                "kill": true,
-                "pathSpeed": 2.0
-            },
-            "type": "path",
-            "animations": "triangle"
-        },
-        {
-            "image": "idle",
-            "extraImages": "redPlayer",
-            "assetPath": "assets/guy2/",
-            "pos": [
-                0,
-                320
-            ],
-            "extraArgs": {
-                "path": [
-                    [
-                        0,
-                        320
-                    ],
-                    [
-                        0,
-                        192
-                    ],
-                    [
-                        1152,
-                        192
-                    ],
-                    [
-                        1216,
-                        192
-                    ]
-                ],
-                "pathSpeed": 0.25,
-                "pathRepeat": false
-            },
-            "type": "path",
-            "animations": "player"
-        },
-        {
-            "image": "idle",
-            "extraImages": "triangle",
-            "assetPath": "assets/triangle/",
-            "pos": [
                 1088,
                 320
             ],
@@ -225,49 +114,297 @@
         },
         {
             "image": "idle",
-            "extraImages": "redPlayer",
-            "assetPath": "assets/guy2/",
+            "extraImages": "button",
+            "assetPath": "assets/button/",
             "pos": [
-                448,
+                64,
+                192
+            ],
+            "extraArgs": {
+                "triggerId": "one"
+            },
+            "animations": "button"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                1152,
+                576
+            ],
+            "extraArgs": {
+                "path": [
+                    [
+                        1152,
+                        576
+                    ],
+                    [
+                        1152,
+                        640
+                    ]
+                ]
+            },
+            "animations": "triangle",
+            "type": "path"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                960,
                 640
             ],
             "extraArgs": {
                 "path": [
                     [
-                        448,
+                        960,
                         640
                     ],
                     [
-                        448,
-                        384
+                        960,
+                        576
+                    ]
+                ]
+            },
+            "type": "path",
+            "animations": "triangle"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                704,
+                640
+            ],
+            "extraArgs": {
+                "path": [
+                    [
+                        704,
+                        640
+                    ],
+                    [
+                        768,
+                        640
+                    ],
+                    [
+                        768,
+                        576
                     ]
                 ],
-                "pathSpeed": 0.25
+                "pathStartup": 0.6
             },
-            "type": "path"
+            "type": "path",
+            "animations": "triangle"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                448,
+                64
+            ],
+            "extraArgs": {
+                "path": [
+                    [
+                        448,
+                        64
+                    ],
+                    [
+                        448,
+                        0
+                    ]
+                ],
+                "pathCooldown": 80.0,
+                "pathSpeed": 2.0,
+                "kill": true,
+                "pathTrigger": "one"
+            },
+            "type": "path",
+            "animations": "triangle"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                960,
+                64
+            ],
+            "extraArgs": {
+                "path": [
+                    [
+                        960,
+                        64
+                    ],
+                    [
+                        960,
+                        0
+                    ]
+                ],
+                "pathCooldown": 80.0,
+                "kill": true,
+                "pathSpeed": 2.0,
+                "pathTrigger": "one"
+            },
+            "type": "path",
+            "animations": "triangle"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                1088,
+                64
+            ],
+            "extraArgs": {
+                "path": [
+                    [
+                        1088,
+                        64
+                    ],
+                    [
+                        1088,
+                        0
+                    ]
+                ],
+                "pathCooldown": 80.0,
+                "kill": true,
+                "pathSpeed": 2.0,
+                "pathTrigger": "one"
+            },
+            "type": "path",
+            "animations": "triangle"
         },
         {
             "image": "idle",
             "extraImages": "redPlayer",
             "assetPath": "assets/guy2/",
             "pos": [
-                576,
-                448
+                0,
+                320
             ],
             "extraArgs": {
                 "path": [
                     [
-                        576,
+                        0,
+                        320
+                    ],
+                    [
+                        0,
+                        192
+                    ],
+                    [
+                        1216,
+                        192
+                    ]
+                ],
+                "pathSpeed": 0.26,
+                "pathRepeat": false,
+                "pathTrigger": "one"
+            },
+            "type": "path",
+            "animations": "player"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                64,
+                512
+            ],
+            "extraArgs": {
+                "pathStartup": 0.2,
+                "path": [
+                    [
+                        64,
+                        512
+                    ],
+                    [
+                        128,
+                        512
+                    ],
+                    [
+                        128,
                         448
                     ],
                     [
                         64,
                         448
                     ]
-                ],
-                "pathSpeed": 0.25
+                ]
             },
-            "type": "path"
+            "type": "path",
+            "animations": "triangle"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                192,
+                384
+            ],
+            "extraArgs": {
+                "path": [
+                    [
+                        192,
+                        384
+                    ],
+                    [
+                        256,
+                        384
+                    ],
+                    [
+                        256,
+                        448
+                    ],
+                    [
+                        192,
+                        448
+                    ]
+                ],
+                "pathStartup": 0.2
+            },
+            "type": "path",
+            "animations": "triangle"
+        },
+        {
+            "image": "idle",
+            "extraImages": "triangle",
+            "assetPath": "assets/triangle/",
+            "pos": [
+                320,
+                512
+            ],
+            "extraArgs": {
+                "pathSpeed": 0.2,
+                "path": [
+                    [
+                        320,
+                        512
+                    ],
+                    [
+                        320,
+                        384
+                    ],
+                    [
+                        384,
+                        384
+                    ],
+                    [
+                        384,
+                        512
+                    ]
+                ]
+            },
+            "type": "path",
+            "animations": "triangle"
         }
     ],
     "terrain": [
@@ -579,33 +716,6 @@
         },
         {
             "image": 0,
-            "assetPath": "assets/terrain/brick/",
-            "material": "brick",
-            "pos": [
-                704,
-                64
-            ]
-        },
-        {
-            "image": 0,
-            "assetPath": "assets/terrain/brick/",
-            "material": "brick",
-            "pos": [
-                704,
-                0
-            ]
-        },
-        {
-            "image": 0,
-            "assetPath": "assets/terrain/brick/",
-            "material": "brick",
-            "pos": [
-                576,
-                128
-            ]
-        },
-        {
-            "image": 0,
             "assetPath": "assets/terrain/phantombrick/",
             "pos": [
                 0,
@@ -625,14 +735,6 @@
             "assetPath": "assets/terrain/phantombrick/",
             "pos": [
                 448,
-                192
-            ]
-        },
-        {
-            "image": 0,
-            "assetPath": "assets/terrain/phantombrick/",
-            "pos": [
-                512,
                 192
             ]
         },
@@ -1100,10 +1202,82 @@
         },
         {
             "image": 0,
-            "assetPath": "assets/terrain/phantombrick/",
+            "assetPath": "assets/terrain/brick/",
             "pos": [
-                0,
+                640,
+                0
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                64
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                640,
+                128
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                1024,
+                640
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                832,
+                576
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
                 320
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                512,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                576,
+                448
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
+                384
+            ]
+        },
+        {
+            "image": 0,
+            "assetPath": "assets/terrain/brick/",
+            "pos": [
+                448,
+                640
             ]
         }
     ]
