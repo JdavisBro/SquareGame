@@ -5,4 +5,5 @@ userPrefs.json
 
 # Build
 output/*
-build.bat
+*.bat
+*.command

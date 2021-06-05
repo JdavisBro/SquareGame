@@ -638,7 +638,7 @@ def start():
             pauseMenu.update(pygame.event.get())
         if goMainMenu:
             levels = list(list(os.walk("levels"))[0][2])
-            levels = [f[:-5] for f in levels if f.endswith(".json") and (not f.startswith("_") or debug)]
+            levels = [f[:-5] for f in sorted(levels) if f.endswith(".json") and (not f.startswith("_") or debug)]
             dropSelect.update_items([(level.replace("[q]","?"),level) for level in levels])
             dropSelect.make_selection_drop()
             return
@@ -1099,7 +1099,7 @@ menu = pygame_menu.Menu('SquareGame.',screenSize[0],screenSize[1],theme=pygame_m
 menu.add.button('Play Game', start)
 menu.add.vertical_margin(20)
 levels = list(list(os.walk("levels"))[0][2])
-levels = [f[:-5] for f in levels if f.endswith(".json") and (not f.startswith("_") or debug)]
+levels = [f[:-5] for f in sorted(levels) if f.endswith(".json") and (not f.startswith("_") or debug)]
 levelName = levels[0]
 dropSelect = menu.add.dropselect("Level", [(f.replace("[q]","?"),f) for f in levels],onchange=select_level,dropselect_id="levelSelect",default=0,placeholder_add_to_selection_box=False,selection_box_width=350,selection_box_height=8,selection_box_bgcolor=(148, 148, 148),selection_option_selected_bgcolor=(120, 120, 120),selection_box_arrow_color=(255,255,255),selection_option_selected_font_color=(250,250,250),selection_option_font_color=(255,255,255))
 for i in [('Preferences',preferencesMenu),('Quit Game', close)]:
