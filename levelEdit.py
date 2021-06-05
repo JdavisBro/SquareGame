@@ -60,7 +60,11 @@ class LevelEditor():
             clicked = mouseRect.collidelist(list(self.levelEditAssets.values()))
             if clicked != -1 and not self.posMode: # Clicked an asset
                 if mouse[0]:
-                    selectedN = 0
+                    oldSel = self.selectedN
+                    self.selectedN = 0
+                    if oldSel != self.selectedN:
+                        self.editSurface.fill((0,0,0),self.levelEditAssets[self.selected])
+                        self.editSurface.blit(self.images[vars.terrains[self.selected]][self.selectedN],self.levelEditAssets[self.selected])
                     if list(self.levelEditAssets.keys())[clicked] == "save":
                         if not self.previousMouse[0]:
                             outN = 0
@@ -73,19 +77,7 @@ class LevelEditor():
                     self.selected = list(self.levelEditAssets.keys())[clicked]
                     self.prevGridPos = [-1,-1]
                 elif (mouse[1] and not self.previousMouse[1]) or (mouse[2] and not self.previousMouse[2]):
-                    if self.selected in vars.terrains.keys():
-                        terrain = vars.terrains[self.selected]
-                        self.selectedN += -1 if mouse[1] and (0 <= self.selectedN-1) else 1 if len(vars.images[terrain])>self.selectedN+1 and mouse[2] else 0
-                        self.editSurface.fill((0,0,0),self.levelEditAssets[self.selected])
-                        if not self.check_for_image(terrain,self.selectedN,pygame.Surface):
-                            if not isinstance(vars.images[terrain][self.selectedN],pygame.Surface):
-                                self.images[terrain][self.selectedN] = pygame.image.load(f"{self.selected}{vars.images[terrain][self.selectedN]}")
-                            else:
-                                self.images[terrain][self.selectedN] = vars.images[terrain][self.selectedN]
-                            self.images[terrain][self.selectedN] = pygame.transform.scale(self.images[terrain][self.selectedN],(32,32))
-                        self.editSurface.blit(self.images[terrain][self.selectedN],self.levelEditAssets[self.selected])
-                        self.previousMouse = mouse
-                        self.prevGridPos = [-1,-1]
+                    self.update_asset(mouse)
             else: # Didn't click an asset, could've clicked a grid spot
                 mouseRect.topleft = (mouseRect.x-24+scroll[0],mouseRect.y-24+scroll[1])
                 if not (bind(mouseRect.x,self.size[0],0)[1] or bind(mouseRect.y,self.size[1],0)[1]): # WE ON DA GRID
@@ -134,8 +126,24 @@ class LevelEditor():
                                     self.add_widget(arg,argType,guy,True)
                                 self.editMenu.enable()
                                 return self.edit_menu()
+                elif (mouse[1] and not self.previousMouse[1]) or (mouse[2] and not self.previousMouse[2]):
+                    self.update_asset(mouse)
         self.previousMouse = mouse
         return self.selectedIm,(True if pygame.key.get_pressed()[pygame.K_p] else False)
+
+    def update_asset(self,mouse):
+        if self.selected in vars.terrains.keys():
+            terrain = vars.terrains[self.selected]
+            self.selectedN += -1 if mouse[1] and (0 <= self.selectedN-1) else 1 if len(vars.images[terrain])>self.selectedN+1 and mouse[2] else 0
+            self.editSurface.fill((0,0,0),self.levelEditAssets[self.selected])
+            if not self.check_for_image(terrain,self.selectedN,pygame.Surface):
+                if not isinstance(vars.images[terrain][self.selectedN],pygame.Surface):
+                    self.images[terrain][self.selectedN] = pygame.image.load(f"{self.selected}{vars.images[terrain][self.selectedN]}")
+                else:
+                    self.images[terrain][self.selectedN] = vars.images[terrain][self.selectedN]
+                self.images[terrain][self.selectedN] = pygame.transform.scale(self.images[terrain][self.selectedN],(32,32))
+            self.editSurface.blit(self.images[terrain][self.selectedN],self.levelEditAssets[self.selected])
+            self.prevGridPos = [-1,-1]
 
     def check_for_image(self,thing,index,typeCheck="NOCHECK"):
         if self.images.get(thing):

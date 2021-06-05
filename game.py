@@ -5,13 +5,12 @@ import sys
 import random
 import copy
 
-import rich
-from rich import print
-
 # External
 import pygame
 import pygame.freetype
 import pygame_menu
+import rich
+from rich import print
 
 # Local
 import vars
@@ -32,7 +31,7 @@ screenSize = (size[0]+48,size[1]+48)
 bg = 0, 0, 0
 scroll = [0,0]
 
-pygame.display.set_caption("Game.")
+pygame.display.set_caption("SquareGame.")
 icon = pygame.image.load("assets/icon.png")
 pygame.display.set_icon(icon)
 
@@ -466,7 +465,6 @@ class PathSprite(Sprite):
                 if self.extraArgs["pathTrigger"]:
                     if self.extraArgs["pathTrigger"] in triggers:
                         if not triggers[self.extraArgs["pathTrigger"]]:
-                            super().update(tick)
                             return
                 pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
                 if self.startupImmunity == 0:
@@ -1097,7 +1095,7 @@ preferencesMenu.add.button("Back", pygame_menu.events.BACK)
 
 darken_apply()
 
-menu = pygame_menu.Menu('Game.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up main menu
+menu = pygame_menu.Menu('SquareGame.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up main menu
 menu.add.button('Play Game', start)
 menu.add.vertical_margin(20)
 levels = list(list(os.walk("levels"))[0][2])
