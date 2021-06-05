@@ -48,7 +48,8 @@
                         1088,
                         448
                     ]
-                ]
+                ],
+                "kill": true
             },
             "animations": "triangle",
             "type": "path"
@@ -71,7 +72,8 @@
                         960,
                         448
                     ]
-                ]
+                ],
+                "kill": true
             },
             "type": "path",
             "animations": "triangle"
@@ -94,7 +96,8 @@
                         832,
                         448
                     ]
-                ]
+                ],
+                "kill": true
             },
             "type": "path",
             "animations": "triangle"
@@ -143,7 +146,8 @@
                         1152,
                         640
                     ]
-                ]
+                ],
+                "kill": true
             },
             "animations": "triangle",
             "type": "path"
@@ -166,7 +170,8 @@
                         960,
                         576
                     ]
-                ]
+                ],
+                "kill": true
             },
             "type": "path",
             "animations": "triangle"
@@ -194,7 +199,8 @@
                         576
                     ]
                 ],
-                "pathStartup": 0.6
+                "pathStartup": 0.6,
+                "kill": true
             },
             "type": "path",
             "animations": "triangle"
@@ -303,7 +309,7 @@
                         192
                     ]
                 ],
-                "pathSpeed": 0.26,
+                "pathSpeed": 0.245,
                 "pathRepeat": false,
                 "pathTrigger": "one"
             },

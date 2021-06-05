@@ -197,7 +197,7 @@ class Sprite:
                     goMainMenu = True
                 else:
                     levelName = levels[levels.index(levelName)+1]
-                    menu.get_widget("levelSelect").set_value(levelName)
+                    menu.get_widget("levelSelect").set_value(levelName.replace("[q]","?"))
                     levelChange = True
             if self.animationEnd:
                 self.animation = self.animationEnd
@@ -635,8 +635,8 @@ def start():
     levelChange = False
     while 1:
         if pauseMenu.is_enabled():
-            if pauseMenu.get_widgets()[0].get_title() != levelName:
-                pauseMenu.get_widgets()[0].set_title(levelName)
+            if pauseMenu.get_widgets()[0].get_title() != levelName.replace("[q]","?"):
+                pauseMenu.get_widgets()[0].set_title(levelName.replace("[q]","?"))
             pauseMenu.update(pygame.event.get())
         if goMainMenu:
             levels = list(list(os.walk("levels"))[0][2])
