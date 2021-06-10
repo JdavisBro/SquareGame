@@ -2,6 +2,7 @@
 __pycache__
 userPrefs.json
 .mypy-cache
+screenshots
 
 # Build
 output/*

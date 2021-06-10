@@ -745,7 +745,9 @@ def reset_level():
         levelEdit.level_reset()
 
 def reset():
-    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg, size, triggers
+    global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg, size, triggers,screenshotPressedLastFrame
+    screenshotPressedLastFrame = False
+    os.makedirs(f"{application_path}/screenshots",exist_ok=True)
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -812,11 +814,13 @@ def display_rect(rect,colour=(255,0,0,100)):
     rectsToFill.append((rect,colour))
 
 def update(tick):
-    global play, newKeyboard, rectsToFill, playerSprite
+    global play, newKeyboard, rectsToFill, playerSprite, screenshotPressedLastFrame
 
     [playerSprite.remove(sprite) for sprite in playerSprite if sprite not in sprites]
 
     rectsToFill = []
+
+    fullboard = pygame.key.get_pressed()
 
     newKeyboard = copy.deepcopy(blankKeyboard)
 
@@ -855,7 +859,7 @@ def update(tick):
     screen.fill((0,0,0))
 
     if levelEdit and play:
-        if pygame.key.get_pressed()[pygame.K_o]:
+        if fullboard[pygame.K_o]:
             play = False
             reset()
 
@@ -921,36 +925,48 @@ def update(tick):
         alpha = alpha + tick//2 if alpha + tick//2 < 255 else 255
     hudSurface.set_alpha(alpha)
 
-    screen.blit(hudSurface,(0,0))
+    if not fullboard[pygame.K_F1]: # HUD Stuff.
+        screen.blit(hudSurface,(0,0))
 
-    if playerSprite:
-        if any([sprite.extraArgs["won"] for sprite in playerSprite]):
-            font_render("arial60","Congratulations!",(70,70),(255,255,255))
+        if playerSprite:
+            if any([sprite.extraArgs["won"] for sprite in playerSprite]):
+                font_render("arial60","Congratulations!",(70,70),(255,255,255))
 
-    if levelData['level']['keys']:
-        font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,7),(25,25,25,alpha),antialiasing=False)
+        if levelData['level']['keys']:
+            font_render("munro18",f"{collectedKeys}/{levelData['level']['keys']}",(45,7),(25,25,25,alpha),antialiasing=False)
 
-    if levelEdit:
-        font_render("munro24",str(levelEdit.mousePos),(90,0))
-    if debug:
-        if not pygame.mouse.get_visible():
-            pygame.mouse.set_visible(True)
-        font_render("munro24",str(pygame.mouse.get_pos()),(400,0))
-        if rectsToFill and pygame.key.get_pressed()[pygame.K_RETURN]:
-            surface = pygame.Surface(size,pygame.SRCALPHA)
-            for i in rectsToFill:
-                surface.fill(i[1],i[0],pygame.BLEND_RGBA_ADD)
-            screen.blit(surface,(24,24))
-    t = timer.time_readable(timer.time)
-    font_render("munro24",t,(1216,10),(8,8,200,alpha))
-    font_render("munro24",t,(1214,8),(255,255,255,alpha))
-    t = timer.time_readable(timer.levelTime,False)
-    font_render("munro24",t,(1245,40),(200,8,8,alpha))
-    font_render("munro24",t,(1243,38),(255,255,255,alpha))
+        if levelEdit:
+            font_render("munro24",str(levelEdit.mousePos),(90,0))
 
-    if debug and playerSprite:
-        font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(playerSprite[0].rect.x)} y {add_zeros(playerSprite[0].rect.y)} dir {add_zeros(playerSprite[0].direction,0)} pro {add_zeros(playerSprite[0].projected_direction,0)} T {add_zeros(playerSprite[0].rect.top)} L {add_zeros(playerSprite[0].rect.left)} R {add_zeros(playerSprite[0].rect.right)} B {add_zeros(playerSprite[0].rect.bottom)} | s {add_zeros(playerSprite[0].fSpeed,1)} {add_zeros(playerSprite[0].speed[0],1)} {add_zeros(playerSprite[0].speed[1],1)} su {add_zeros(playerSprite[0].startup,1)} | Scroll: {scroll} | Ani: {add_zeros(playerSprite[0].animationFrame)} {playerSprite[0].animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
-        font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in playerSprite[0].extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
+        if debug:
+            if not pygame.mouse.get_visible():
+                pygame.mouse.set_visible(True)
+
+            font_render("munro24",str(pygame.mouse.get_pos()),(400,0))
+
+            if rectsToFill and fullboard[pygame.K_RETURN]:
+                surface = pygame.Surface(size,pygame.SRCALPHA)
+                for i in rectsToFill:
+                    surface.fill(i[1],i[0],pygame.BLEND_RGBA_ADD)
+                screen.blit(surface,(24,24))
+
+            if playerSprite:
+                font_render("consolas10",f"F {add_zeros(frameN)} PS {clock.get_fps():.2f} T {add_zeros(tick,3)} x {add_zeros(playerSprite[0].rect.x)} y {add_zeros(playerSprite[0].rect.y)} dir {add_zeros(playerSprite[0].direction,0)} pro {add_zeros(playerSprite[0].projected_direction,0)} T {add_zeros(playerSprite[0].rect.top)} L {add_zeros(playerSprite[0].rect.left)} R {add_zeros(playerSprite[0].rect.right)} B {add_zeros(playerSprite[0].rect.bottom)} | s {add_zeros(playerSprite[0].fSpeed,1)} {add_zeros(playerSprite[0].speed[0],1)} {add_zeros(playerSprite[0].speed[1],1)} su {add_zeros(playerSprite[0].startup,1)} | Scroll: {scroll} | Ani: {add_zeros(playerSprite[0].animationFrame)} {playerSprite[0].animation}",(4,730),(255,255,255),bg_colour=(0,0,0)) # The speed values and negetive numbers are kinda fucked but i dont care.
+                font_render("consolas10",f"{' '.join([arg+'='+(str(value) if not isinstance(value,bool) else ('T' if value else 'F')) for arg,value in playerSprite[0].extraArgs.items()])}",(4,740),(255,255,255),bg_colour=(0,0,0))
+
+        t = timer.time_readable(timer.time)
+        font_render("munro24",t,(1216,10),(8,8,200,alpha))
+        font_render("munro24",t,(1214,8),(255,255,255,alpha))
+        t = timer.time_readable(timer.levelTime,False)
+        font_render("munro24",t,(1245,40),(200,8,8,alpha))
+        font_render("munro24",t,(1243,38),(255,255,255,alpha))
+
+    if fullboard[pygame.K_F2] and not screenshotPressedLastFrame:
+        i = 1
+        while os.path.exists(f"{application_path}/screenshots/{i}.png"):
+            i += 1
+        pygame.image.save(screen,f"{application_path}/screenshots/{i}.png")
+    screenshotPressedLastFrame = fullboard[pygame.K_F2]
 
 def add_zeros(text,zeros=4):
     if text is None:
