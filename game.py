@@ -747,7 +747,7 @@ def reset_level():
 def reset():
     global terrains, sprites, keyboard, terrainSurface, play, levelEdit, collectedKeys, newKeyboard, debugTextBg, size, triggers,screenshotPressedLastFrame
     screenshotPressedLastFrame = False
-    os.makedirs(f"{application_path}/screenshots",exist_ok=True)
+    os.makedirs(os.path.join(application_path, "screenshots"),exist_ok=True)
 
     if pauseMenu.is_enabled():
         pauseMenu.disable()
@@ -963,9 +963,9 @@ def update(tick):
 
     if fullboard[pygame.K_F2] and not screenshotPressedLastFrame:
         i = 1
-        while os.path.exists(f"{application_path}/screenshots/{i}.png"):
+        while os.path.exists(os.path.join(application_path, "screenshots", f"{i}.png")):
             i += 1
-        pygame.image.save(screen,f"{application_path}/screenshots/{i}.png")
+        pygame.image.save(screen,os.path.join(application_path, "screenshots", f"{i}.png"))
     screenshotPressedLastFrame = fullboard[pygame.K_F2]
 
 def add_zeros(text,zeros=4):
