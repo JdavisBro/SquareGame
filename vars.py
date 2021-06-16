@@ -35,10 +35,6 @@ images = {
     },
     "buttons": {
         "idle": "idle.png",
-        "w": "w.png",
-        "a": "a.png",
-        "s": "s.png",
-        "d": "d.png",
         "space": "space.png"
     },
     "stone": {

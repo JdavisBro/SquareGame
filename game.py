@@ -640,7 +640,6 @@ def start():
             levels = list(list(os.walk("levels"))[0][2])
             levels = [f[:-5] for f in sorted(levels) if f.endswith(".json") and (not f.startswith("_") or debug)]
             dropSelect.update_items([(level.replace("[q]","?"),level) for level in levels])
-            dropSelect.make_selection_drop()
             return
         if pauseMenu.is_enabled():
             pauseMenu.draw(screen)
