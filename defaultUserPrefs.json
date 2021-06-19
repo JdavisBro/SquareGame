@@ -2,6 +2,7 @@
     "levelCompleteAction": 0,
     "timerStart": 0,
     "automaticMovement": 0,
+    "fullscreen": 0,
     "binds": {
         "up": 119,
         "down": 115,

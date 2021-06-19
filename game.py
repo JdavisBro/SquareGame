@@ -35,13 +35,25 @@ pygame.display.set_caption("SquareGame.")
 icon = pygame.image.load("assets/icon.png")
 pygame.display.set_icon(icon)
 
+if not os.path.exists(prefsPath): # userPrefs
+    with open("defaultUserPrefs.json","r") as f2:
+        userPrefs = json.load(f2)
+    with open(prefsPath,"w+") as f:
+        json.dump(userPrefs,f,indent=4)
+else:
+    with open(prefsPath,"r") as f:
+        userPrefs = json.load(f)
+
+fullscreen = userPrefs['fullscreen']
+
 if 'levelEdit' in sys.argv:
     screen = pygame.display.set_mode([screenSize[0]+500,screenSize[1]])
     from levelEdit import LevelEditor
     levelEdit = LevelEditor(screenSize,size,screen)
 else:
     levelEdit = None
-    screen = pygame.display.set_mode(screenSize)
+    flags = 0 if not fullscreen == 1 else pygame.SCALED | pygame.FULLSCREEN
+    screen = pygame.display.set_mode(screenSize,flags=flags,vsync=1)
 
 frameN = 1
 clock = pygame.time.Clock()
@@ -154,12 +166,12 @@ class Sprite:
             if collectedKeys >= levelData["level"]["keys"]:
                 self.set_animation("unlock")
                 self.extraArgs["locked"] = False
-        self.do_animations()
+        self.do_animations(tick)
 
     def collisions(self,binded):
         return binded
 
-    def do_animations(self):
+    def do_animations(self,tick):
         global goMainMenu,levelChange,levelName
         if not self.animations or not self.animation:
             return
@@ -178,6 +190,9 @@ class Sprite:
                     if self.animation == self.animations["playerNear"][1]:
                         self.animation = self.animations["idle"][1]
                         animationChanged = True
+        self.animationFrames += tick/8
+        if int(self.animationFrames) // self.animationTime != self.animationFrame:
+            self.animationFrame += 1
         if self.animationFrame >= len(self.animation):
             if not self.animationTimeout[1] and self.animationTimeout[0] != -1:
                 self.animationTimeout[1] = True
@@ -216,12 +231,7 @@ class Sprite:
             if animationChanged:
                 self.image = self.images[self.animation[self.animationFrame]]
         else:
-            if animationChanged:
-                self.image = self.images[self.animation[self.animationFrame]]
-            if self.animationFrames % self.animationTime == 0:
-                self.image = self.images[self.animation[self.animationFrame]]
-                self.animationFrame += 1
-            self.animationFrames += 1
+            self.image = self.images[self.animation[self.animationFrame]]
 
     def set_animation(self,anim,args=None):
         if not self.animations:
@@ -244,6 +254,8 @@ class Sprite:
                 self.animationEnd = [frame.format(args) for frame in self.animations[anim][2]]
             else:
                 self.animationEnd = self.animations[anim][2]
+            if getattr(self,"images",False):
+                self.image = self.images[self.animation[self.animationFrame]]
         else:
             self.animation = []
 
@@ -263,7 +275,7 @@ class PlayerSprite(Sprite):
     def __init__(
         self,image,pos=[0,0],assetPath="assets/",scale=4,
         acceleration=0.25,extraImages="default",extraArgs={},
-        animations=None,weight=0
+        animations=None,weight=2
         ):
         super().__init__(image,pos,assetPath,scale,extraImages,extraArgs,animations,weight)
         self.speed = [0,0] # Speed
@@ -329,9 +341,9 @@ class PlayerSprite(Sprite):
                 self.speed = [0,0]
                 self.fSpeed = 0
                 self.direction = None
-                if not self.animation:
-                    self.set_animation("collide")
-            self.startup -= 0.5 if self.startup > 1 else 0
+                self.set_animation("collide")
+            self.startup -= (0.5*tick/8) if self.startup > 1 else 0
+            self.startup = 1 if self.startup <= 1 else self.startup 
         if self.rect.centerx - scroll[0] > screenSize[0]//2: # RIGHT
             if not (self.fSpeed and self.direction == 3): # this line is so that scroll doesn't snap back if going after the direction scroll happens
                 scroll[0] += self.rect.centerx-scroll[0] - screenSize[0]//2
@@ -443,7 +455,7 @@ class PlayerSprite(Sprite):
 class PathSprite(Sprite):
     def __init__(self,image,pos=[0,0],assetPath="assets/",scale=4,
         acceleration=0.25,extraImages="default",extraArgs={},
-        animations=None,weight=0
+        animations=None,weight=1
         ):
         super().__init__(image,pos,assetPath,scale,extraImages,extraArgs,animations,weight)
         self.pathIndex = 0
@@ -467,7 +479,7 @@ class PathSprite(Sprite):
                         if not triggers[self.extraArgs["pathTrigger"]]:
                             return
                 pathDifference = [self.extraArgs["path"][self.pathIndex][0]-list(self.rect.topleft)[0],self.extraArgs["path"][self.pathIndex][1]-list(self.rect.topleft)[1]]
-                if self.startupImmunity == 0:
+                if self.startupImmunity <= 0:
                     movement = self.extraArgs["pathSpeed"]/self.startup*tick
                 else:
                     movement = self.extraArgs["pathSpeed"]*tick
@@ -522,12 +534,13 @@ class PathSprite(Sprite):
                         self.pathIndex = self.pathIndex + 1 if self.pathIndexDir == 0 else self.pathIndex - 1
                     self.pathCooldown = self.extraArgs["pathCooldown"]
                     self.set_animation("idle")
-                self.startupImmunity -= 1 if self.startupImmunity > 0 else 0
-                if self.startup > 1:
-                    self.startup -= 0.5
-                    if self.startup <= 1:
-                        self.startupImmunity = 90
                 self.collisions(move)
+        self.startupImmunity -= 8/tick if self.startupImmunity > 0 else 0
+        if self.startup > 1:
+            self.startup -= 4/tick
+            if self.startup <= 1:
+                self.startupImmunity = 90
+                self.startup = 1
         super().update(tick)
 
     def collisions(self,move):
@@ -995,16 +1008,12 @@ def select_level(a, selectedLevel, *args, **kwargs):
     global levelName
     levelName = selectedLevel
 
-if not os.path.exists(prefsPath): # userPrefs and preferences menu
-    with open("defaultUserPrefs.json","r") as f2:
-        userPrefs = json.load(f2)
-    with open(prefsPath,"w+") as f:
-        json.dump(userPrefs,f,indent=4)
-else:
-    with open(prefsPath,"r") as f:
-        userPrefs = json.load(f)
-
 def update_prefs():
+    global fullscreen
+    if fullscreen != userPrefs['fullscreen']:
+        flags = 0 if not userPrefs['fullscreen'] == 1 else pygame.SCALED | pygame.FULLSCREEN
+        screen = pygame.display.set_mode(screenSize,flags=flags)
+        fullscreen = userPrefs['fullscreen']
     with open(prefsPath,"w+") as f:
         json.dump(userPrefs,f,indent=4)
     darken_apply()
@@ -1098,16 +1107,20 @@ def set_preference(a,value,pref,*args,**kwargs):
     userPrefs[pref] = value
     light_apply()
 
+def toggle_fullscreen(value):
+    userPrefs['fullscreen'] = value
+    light_apply()
+
 preferencesMenu = pygame_menu.Menu('Preferences.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up preferences menu
 prefs = [("On level complete ", [("Next level",0),("Main Menu",1),("Reset Level",2)], "levelCompleteAction"),("Timer start ", [("On Level Load",0),("On First Input",1)], "timerStart"),("Move on ", [("Action Button Press",0),("Direction Press",1)], "automaticMovement")]
 [preferencesMenu.add.selector(pref[0],pref[1],selector_id=pref[2],onchange=set_preference,default=userPrefs[pref[2]],pref=pref[2]) for pref in prefs]
+preferencesMenu.add.toggle_switch("Fullscreen",default=userPrefs['fullscreen'],onchange=toggle_fullscreen,toggleswitch_id='fullscreen')
 preferencesMenu.add.vertical_margin(20)
 preferencesMenu.add.button("Controls",controlsMenu)
 preferencesMenu.add.vertical_margin(40)
 applies.append(preferencesMenu.add.button("Apply", update_prefs))
 disgards.append(preferencesMenu.add.button("Disgard", disgard))
 preferencesMenu.add.button("Back", pygame_menu.events.BACK)
-
 darken_apply()
 
 menu = pygame_menu.Menu('SquareGame.',screenSize[0],screenSize[1],theme=pygame_menu.themes.THEME_DARK) # Setting up main menu

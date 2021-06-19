@@ -38,7 +38,7 @@
                 "path": [
                     [
                         192,
-                        640
+                        576
                     ],
                     [
                         192,
@@ -93,7 +93,7 @@
                         576
                     ],
                     [
-                        1140,
+                        1088,
                         576
                     ]
                 ],
@@ -416,11 +416,11 @@
         },
         {
             "image": 0,
-            "assetPath": "assets/terrain/brick/",
+            "assetPath": "assets/terrain/phantombrick/",
             "material": "brick",
             "pos": [
-                512,
-                448
+                576,
+                384
             ]
         },
         {
