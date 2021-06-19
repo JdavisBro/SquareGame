@@ -436,7 +436,11 @@ class PlayerSprite(Sprite):
                         self.rect.left = spritesNoMe[collision].rect.right
                     spritesNoMe[collision].startup = 30
                     if "collide" in spritesNoMe[collision].animations:
-                        spritesNoMe[collision].set_animation("collide")
+                        if spritesNoMe[collision].extraArgs["pathTrigger"]:
+                            if triggers[spritesNoMe[collision].extraArgs["pathTrigger"]] and (not self.extraArgs["pathRepeat"] and self.done):
+                                spritesNoMe[collision].set_animation("collide")
+                        else:
+                            spritesNoMe[collision].set_animation("collide")
         rects = [terrain.rect for terrain in terrains]
         collides = self.rect.collidelistall(rects)
         if collides:
